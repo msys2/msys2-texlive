@@ -7,6 +7,7 @@ import tempfile
 import tarfile
 import logging
 import argparse
+import time
 
 logger = logging.getLogger("downloader")
 perl_to_py_dict_regex = re.compile(r"(?P<key>\S*) (?P<value>[\s\S][^\n]*)")
@@ -15,13 +16,16 @@ perl_to_py_dict_regex = re.compile(r"(?P<key>\S*) (?P<value>[\s\S][^\n]*)")
 def find_mirror() -> str:
     """Find a mirror and lock to it. Or else things could
     go weird."""
-    base_mirror = "http://mirror.ctan.org/"
-    con = requests.get(base_mirror)
-    return con.history[-1].url
+    #base_mirror = "http://mirror.ctan.org/systems/texlive/tlnet"
+    #con = requests.get(base_mirror)
+    #return con.history[-1].url
+    # maybe let's try texlive.info
+    timenow = time.localtime()
+    return "https://texlive.info/tlnet-archive/%d/%02d/%02d/tlnet/"%(timenow.tm_year,timenow.tm_mon,timenow.tm_mday)
 
 
 def download_texlive_tlpdb(mirror: str) -> None:
-    con = requests.get(mirror + "systems/texlive/tlnet/tlpkg/texlive.tlpdb")
+    con = requests.get(mirror + "tlpkg/texlive.tlpdb")
     with open("texlive.tlpdb", "wb") as f:
         f.write(con.content)
     logger.info("Downloaded texlive.tlpdb")
@@ -101,7 +105,7 @@ def write_contents_file(mirror_url: str, pkgs: dict, file: Path):
     template = dedent(
         """\
     # These are the CTAN packages bundled in this package.
-    # They were downloaded from {url}systems/texlive/tlnet/archive/
+    # They were downloaded from {url}/archive/
     # The svn revision number (on the TeXLive repository)
     # on which each package is based is given in the 2nd column.
 
@@ -139,8 +143,8 @@ def download_and_retry(url: str, local_filename: Path):
 
 def get_url_for_package(pkgname: str, mirror_url: str):
     if mirror_url[-1] == "/":
-        return mirror_url + "systems/texlive/tlnet/archive/" + pkgname + ".tar.xz"
-    return mirror_url + "/systems/texlive/tlnet/archive/" + pkgname + ".tar.xz"
+        return mirror_url + "archive/" + pkgname + ".tar.xz"
+    return mirror_url + "/archive/" + pkgname + ".tar.xz"
 
 
 def create_tar_archive(path: Path, output_filename: Path):
