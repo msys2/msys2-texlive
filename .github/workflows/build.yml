@@ -13,12 +13,30 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: '3.8'
+    
+    - name: Get Version
+      shell: bash
+      id: version
+      run: |
+          $version=$(python -c 'import time;print(time.strftime("%Y%d%m"))')
+          echo "::set-output name=version::$version"
+
     - name: Install dependencies
       run: |
         python -m pip install -r requirements.txt
 
     - name: Build and publish
+      env: 
+        version: ${{ steps.check.version.version }}
       shell: bash
       run: |
-        python download_archives.py scheme-minimal texlive-core-$(python -c 'import time;print(time.strftime("%Y%d%m"))').tar.xz
+        python download_archives.py scheme-medium texlive-core-$version.tar.xz
         
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      with:
+        body: Monthly release of TexLive for MSYS2
+        name: TexLive ${{ steps.check.version.version }}
+        tag_name: ${{ steps.check.version.version }}
+        files: texlive-core-${{ steps.check.version.version }}.tar.xz
+        fail_on_unmatched_files: true
