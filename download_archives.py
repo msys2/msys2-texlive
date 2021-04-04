@@ -14,7 +14,7 @@ import colorlog
 handler = colorlog.StreamHandler()
 handler.setFormatter(
     colorlog.ColoredFormatter(
-        "%(log_color)s - %(message)s",
+        "%(log_color)s%(message)s",
         log_colors=colorlog.default_log_colors
     )
 )
@@ -22,7 +22,7 @@ handler.setFormatter(
 logger = colorlog.getLogger("archive-downloaded")
 logger.addHandler(handler)
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 perl_to_py_dict_regex = re.compile(r"(?P<key>\S*) (?P<value>[\s\S][^\n]*)")
 
