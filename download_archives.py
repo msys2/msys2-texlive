@@ -112,6 +112,7 @@ def get_needed_packages_with_info(scheme: str):
     logger.info("Resolving scheme %s", scheme)
     pkg_list = get_all_packages()
     deps = get_dependencies(scheme, pkg_list, [])
+    deps.sort()
     deps_info = {}
     for i in deps:
         if "." not in i:
@@ -148,7 +149,7 @@ def download(url, local_filename):
 
 def download_and_retry(url: str, local_filename: Path):
     for i in range(10):
-        logger.info("Downloading %s. Try:%s", url, i)
+        logger.info("Downloading %s. Try: %s", url, i)
         try:
             download(url, local_filename)
             break
@@ -180,6 +181,7 @@ def download_all_packages(scheme: str, mirror_url: str, final_tar_location: Path
         needed_pkgs = get_needed_packages_with_info(scheme)
         write_contents_file(mirror_url, needed_pkgs, tmpdir / "CONTENTS")
         for pkg in needed_pkgs:
+            logger.info("Downloading %s",needed_pkgs[pkg]["name"])
             url = get_url_for_package(needed_pkgs[pkg]["name"], mirror_url)
             file_name = tmpdir / Path(url).name
             download_and_retry(url, file_name)

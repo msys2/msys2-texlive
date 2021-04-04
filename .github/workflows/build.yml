@@ -3,41 +3,75 @@ name: Build TexLive source
 on:
   push:
   workflow_dispatch:
-
+  release:
+    types: [created]
 jobs:
   deploy:
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.8'
-    
-    - name: Get Version
-      shell: python
-      id: version
-      run: |
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.8"
+
+      - name: Get Version
+        shell: python
+        id: version
+        run: |
           import time
           version = time.strftime("%Y%d%m")
           print(f"::set-output name=version::{version}")
 
-    - name: Install dependencies
-      run: |
-        python -m pip install -r requirements.txt
+      - name: Install dependencies
+        run: |
+          python -m pip install -r requirements.txt
 
-    - name: Build
-      env: 
-        version: ${{ steps.check.version.version }}
-      shell: bash
-      run: |
-        python download_archives.py scheme-medium texlive-core-$version.tar.xz
-        
-    - name: Release
-      uses: softprops/action-gh-release@v1
-      with:
-        body: Monthly release of TexLive for MSYS2
-        name: TexLive ${{ steps.check.version.version }}
-        tag_name: ${{ steps.check.version.version }}
-        files: texlive-core-${{ steps.check.version.version }}.tar.xz
-        fail_on_unmatched_files: true
+      - name: Build
+        env:
+          version: ${{ steps.version.outputs.version }}
+        shell: bash
+        run: |
+          python download_archives.py scheme-medium texlive-core-$version.tar.xz
+
+      - uses: actions/upload-artifact@v2
+        with:
+          path: texlive-core-${{ steps.version.outputs.version }}.tar.xz
+          name: texlive-core-${{ steps.version.outputs.version }}.tar.xz
+      
+      - name: Install Dependency
+        if: github.event_name == 'release'
+        run: pip install requests
+
+      - name: Get Upload URL
+        id: create_release
+        if: github.event_name == 'release'
+        shell: python
+        env:
+          access_token: ${{ secrets.GITHUB_TOKEN }}
+          tag_act: ${{ github.ref }}
+        run: |
+          import requests
+          import os
+          ref_tag = os.getenv('tag_act').split('/')[-1]
+          access_token = os.getenv('access_token')
+          headers = {
+              "Accept":"application/vnd.github.v3+json",
+              "Authorization": f"token {access_token}"
+          }
+          url = f"https://api.github.com/repos/naveen521kk/msys2-texlive/releases/tags/{ref_tag}"
+          c = requests.get(url,headers=headers)
+          upload_url=c.json()['upload_url']
+          print(f"::set-output name=upload_url::{upload_url}")
+          print(f"::set-output name=tag_name::{ref_tag[1:]}")
+      - name: Upload Release Asset
+        id: upload-release
+        if: github.event_name == 'release'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: texlive-core-${{ steps.version.outputs.version }}.tar.xz
+          asset_name: texlive-core-${{ steps.version.outputs.version }}.tar.xz
+          asset_content_type: application/x-gtar
