@@ -15,11 +15,12 @@ jobs:
         python-version: '3.8'
     
     - name: Get Version
-      shell: bash
+      shell: python
       id: version
       run: |
-          $version=$(python -c 'import time;print(time.strftime("%Y%d%m"))')
-          echo "::set-output name=version::$version"
+          import time
+          version = time.strftime("%Y%d%m")
+          print(f"::set-output name=version::{version}")
 
     - name: Install dependencies
       run: |
