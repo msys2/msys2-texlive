@@ -18,6 +18,8 @@ handler.setFormatter(colorlog.ColoredFormatter(
 logger = colorlog.getLogger('archive-downloaded')
 logger.addHandler(handler)
 
+logging.basicConfig(level=logging.DEBUG,format='%(log_color)s%(levelname)s:%(message)s')
+
 perl_to_py_dict_regex = re.compile(r"(?P<key>\S*) (?P<value>[\s\S][^\n]*)")
 
 
@@ -192,4 +194,7 @@ if __name__ == "__main__":
         "file_name", type=str, help="Full path to save the resultant file."
     )
     args = parser.parse_args()
+    logger.info("Starting...")
+    logger.info("Scheme: %s",args.scheme)
+    logger.info("Filename: %s",args.file_name)
     main(args.scheme, args.file_name)
