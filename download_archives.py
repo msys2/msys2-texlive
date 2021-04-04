@@ -12,13 +12,17 @@ import requests
 import colorlog
 
 handler = colorlog.StreamHandler()
-handler.setFormatter(colorlog.ColoredFormatter(
-	'%(log_color)s%(levelname)s:%(message)s'))
+handler.setFormatter(
+    colorlog.ColoredFormatter(
+        "%(log_color)s - %(message)s",
+        log_colors=colorlog.default_log_colors
+    )
+)
 
-logger = colorlog.getLogger('archive-downloaded')
+logger = colorlog.getLogger("archive-downloaded")
 logger.addHandler(handler)
 
-logging.basicConfig(level=logging.DEBUG,format='%(log_color)s%(levelname)s:%(message)s')
+logging.basicConfig(level=logging.DEBUG)
 
 perl_to_py_dict_regex = re.compile(r"(?P<key>\S*) (?P<value>[\s\S][^\n]*)")
 
@@ -26,12 +30,16 @@ perl_to_py_dict_regex = re.compile(r"(?P<key>\S*) (?P<value>[\s\S][^\n]*)")
 def find_mirror() -> str:
     """Find a mirror and lock to it. Or else things could
     go weird."""
-    #base_mirror = "http://mirror.ctan.org/systems/texlive/tlnet"
-    #con = requests.get(base_mirror)
-    #return con.history[-1].url
+    # base_mirror = "http://mirror.ctan.org/systems/texlive/tlnet"
+    # con = requests.get(base_mirror)
+    # return con.history[-1].url
     # maybe let's try texlive.info
     timenow = time.localtime()
-    return "https://texlive.info/tlnet-archive/%d/%02d/%02d/tlnet/"%(timenow.tm_year,timenow.tm_mon,timenow.tm_mday)
+    return "https://texlive.info/tlnet-archive/%d/%02d/%02d/tlnet/" % (
+        timenow.tm_year,
+        timenow.tm_mon,
+        timenow.tm_mday,
+    )
 
 
 def download_texlive_tlpdb(mirror: str) -> None:
@@ -195,6 +203,6 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     logger.info("Starting...")
-    logger.info("Scheme: %s",args.scheme)
-    logger.info("Filename: %s",args.file_name)
+    logger.info("Scheme: %s", args.scheme)
+    logger.info("Filename: %s", args.file_name)
     main(args.scheme, args.file_name)
