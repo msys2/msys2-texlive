@@ -22,7 +22,7 @@ def find_mirror() -> str:
 
 def download_texlive_tlpdb(mirror: str) -> None:
     con = requests.get(mirror + "systems/texlive/tlnet/tlpkg/texlive.tlpdb")
-    with open("texlive.tlpdb", "wb") as f:
+    with open("texlive.tlpdb", "wb", encoding="utf-8") as f:
         f.write(con.content)
     logger.info("Downloaded texlive.tlpdb")
 
@@ -49,7 +49,7 @@ def parse_perl(perl_code) -> typing.Dict[str, typing.Union[list, str]]:
 
 
 def get_all_packages() -> typing.Dict[str, str]:
-    with open("texlive.tlpdb", "r") as f:
+    with open("texlive.tlpdb", "r", encoding="utf-8") as f:
         lines = f.readlines()
     logger.info("Parsing texlive.tlpdb")
     package_list: typing.Dict[str, typing.Union[list, str]] = {}
@@ -164,7 +164,7 @@ def download_all_packages(scheme: str, mirror_url: str, final_tar_location: Path
         create_tar_archive(path=tmpdir, output_filename=final_tar_location)
 
 
-def main(scheme,filename):
+def main(scheme, filename):
     mirror = find_mirror()
     logger.info("Using mirror: %s", mirror)
     download_texlive_tlpdb(mirror)
@@ -176,6 +176,8 @@ def main(scheme,filename):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process some integers.")
     parser.add_argument("scheme", type=str, help="Scheme for which to Build archive.")
-    parser.add_argument("file_name", type=str, help="Full path to save the resultant file.")
+    parser.add_argument(
+        "file_name", type=str, help="Full path to save the resultant file."
+    )
     args = parser.parse_args()
-    main(args.scheme,args.file_name)
+    main(args.scheme, args.file_name)
