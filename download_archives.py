@@ -164,12 +164,12 @@ def download_all_packages(scheme: str, mirror_url: str, final_tar_location: Path
         create_tar_archive(path=tmpdir, output_filename=final_tar_location)
 
 
-def main(scheme):
+def main(scheme,filename):
     mirror = find_mirror()
     logger.info("Using mirror: %s", mirror)
     download_texlive_tlpdb(mirror)
     # arch uses "scheme-medium"
-    download_all_packages(scheme, mirror, "texlive-core.tar.gz")
+    download_all_packages(scheme, mirror, filename)
     cleanup()
 
 
@@ -178,4 +178,4 @@ if __name__ == "__main__":
     parser.add_argument("scheme", type=str, help="Scheme for which to Build archive.")
     parser.add_argument("file_name", type=str, help="Full path to save the resultant file.")
     args = parser.parse_args()
-    main(args.scheme)
+    main(args.scheme,args.file_name)
