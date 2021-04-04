@@ -22,7 +22,7 @@ def find_mirror() -> str:
 
 def download_texlive_tlpdb(mirror: str) -> None:
     con = requests.get(mirror + "systems/texlive/tlnet/tlpkg/texlive.tlpdb")
-    with open("texlive.tlpdb", "wb", encoding="utf-8") as f:
+    with open("texlive.tlpdb", "wb") as f:
         f.write(con.content)
     logger.info("Downloaded texlive.tlpdb")
 
