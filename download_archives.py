@@ -1,15 +1,23 @@
+import argparse
+import logging
 import re
+import tarfile
+import tempfile
+import time
 import typing
 from pathlib import Path
-import requests
 from textwrap import dedent
-import tempfile
-import tarfile
-import logging
-import argparse
-import time
 
-logger = logging.getLogger("downloader")
+import requests
+import colorlog
+
+handler = colorlog.StreamHandler()
+handler.setFormatter(colorlog.ColoredFormatter(
+	'%(log_color)s%(levelname)s:%(message)s'))
+
+logger = colorlog.getLogger('archive-downloaded')
+logger.addHandler(handler)
+
 perl_to_py_dict_regex = re.compile(r"(?P<key>\S*) (?P<value>[\s\S][^\n]*)")
 
 
