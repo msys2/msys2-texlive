@@ -31,11 +31,18 @@ def find_mirror() -> str:
     # return con.history[-1].url
     # maybe let's try texlive.info
     timenow = time.localtime()
-    return "https://texlive.info/tlnet-archive/%d/%02d/%02d/tlnet/" % (
+    url = "https://texlive.info/tlnet-archive/%d/%02d/%02d/tlnet/" % (
         timenow.tm_year,
         timenow.tm_mon,
         timenow.tm_mday,
     )
+    con = requests.get(url)
+    if con.status_code == 404:
+        return "https://texlive.info/tlnet-archive/%d/%02d/%02d/tlnet/" % (
+            timenow.tm_year,
+            timenow.tm_mon,
+            timenow.tm_mday - 1,
+        )
 
 
 def download_texlive_tlpdb(mirror: str) -> None:
