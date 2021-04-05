@@ -43,6 +43,7 @@ def find_mirror() -> str:
             timenow.tm_mon,
             timenow.tm_mday - 1,
         )
+    return url
 
 
 def download_texlive_tlpdb(mirror: str) -> None:
