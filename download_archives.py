@@ -12,7 +12,11 @@ import requests
 
 logger = logging.getLogger("archive-downloader")
 
-logging.basicConfig(level=logging.INFO,format='%(message)s',datefmt='%Y-%m-%d %H:%M:%S')
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(message)s",
+    datefmt="%Y-%m-%d-%H:%M:%S",
+)
 
 perl_to_py_dict_regex = re.compile(r"(?P<key>\S*) (?P<value>[\s\S][^\n]*)")
 
@@ -51,26 +55,28 @@ def parse_perl(perl_code) -> typing.Dict[str, typing.Union[list, str]]:
         value = findings.group("value")
         if key:
             if key in final_dict:
-                if isinstance(final_dict[key], str):
-                    final_dict[key] = [final_dict[key], value]
+                exists_value = final_dict[key]
+                if isinstance(exists_value, str):
+                    exists_value = [final_dict[key], value]
                 else:
-                    final_dict[key].append(value)
+                    exists_value.append(value)
+                final_dict[key] = exists_value
             else:
                 final_dict[key] = value
     return final_dict
 
 
-def get_all_packages() -> typing.Dict[str, str]:
+def get_all_packages() -> typing.Dict[str, typing.Dict[str, typing.Union[list, str]]]:
     with open("texlive.tlpdb", "r", encoding="utf-8") as f:
         lines = f.readlines()
     logger.info("Parsing texlive.tlpdb")
-    package_list: typing.Dict[str, typing.Union[list, str]] = {}
-    last_line = 0
+    package_list: typing.Dict[str, typing.Dict[str, typing.Union[list, str]]] = {}
+    last_line: int = 0
     for n, line in enumerate(lines):
         if line == "\n":
             tmp = "".join(lines[last_line : n + 1]).strip()
             tmp_dict = parse_perl(tmp)
-            name = tmp_dict["name"]
+            name = str(tmp_dict["name"])
             if "." not in name:
                 package_list[name] = tmp_dict
             last_line = n
@@ -79,22 +85,27 @@ def get_all_packages() -> typing.Dict[str, str]:
 
 def get_dependencies(
     name: str,
-    pkglist: typing.Dict[str, str],
+    pkglist: typing.Dict[str, typing.Dict[str, typing.Union[list, str]]],
     collection_list: typing.List[str],
-):
-    pkg = pkglist[name]
+) -> typing.List[str]:
+    pkg: typing.Dict[str, typing.Union[list, str]] = pkglist[name]
     deps_list = []
     if "depend" not in pkg:
         return []
-    for i in pkg["depend"]:
-        dep_name = i
-        if "collection" in dep_name or "scheme" in dep_name:
-            if dep_name not in collection_list:
-                collection_list.append(dep_name)
-                deps_list += get_dependencies(dep_name, pkglist, collection_list)
-        else:
-            if dep_name not in deps_list:
-                deps_list.append(dep_name)
+    dep_name = pkg["depend"]
+    if isinstance(dep_name, str):
+        if dep_name not in deps_list:
+            deps_list.append(dep_name)
+    else:
+        for i in pkg["depend"]:
+            dep_name = i
+            if "collection" in dep_name or "scheme" in dep_name:
+                if dep_name not in collection_list:
+                    collection_list.append(dep_name)
+                    deps_list += get_dependencies(dep_name, pkglist, collection_list)
+            else:
+                if dep_name not in deps_list:
+                    deps_list.append(dep_name)
     return deps_list
 
 
@@ -165,13 +176,13 @@ def create_tar_archive(path: Path, output_filename: Path):
 
 def download_all_packages(scheme: str, mirror_url: str, final_tar_location: Path):
     logger.info("Starting to Download.")
-    with tempfile.TemporaryDirectory() as tmpdir:
-        logger.info("Using tempdir: %s", tmpdir)
-        tmpdir = Path(tmpdir)
+    with tempfile.TemporaryDirectory() as tmpdir_main:
+        logger.info("Using tempdir: %s", tmpdir_main)
+        tmpdir = Path(tmpdir_main)
         needed_pkgs = get_needed_packages_with_info(scheme)
         write_contents_file(mirror_url, needed_pkgs, tmpdir / "CONTENTS")
         for pkg in needed_pkgs:
-            logger.info("Downloading %s",needed_pkgs[pkg]["name"])
+            logger.info("Downloading %s", needed_pkgs[pkg]["name"])
             url = get_url_for_package(needed_pkgs[pkg]["name"], mirror_url)
             file_name = tmpdir / Path(url).name
             download_and_retry(url, file_name)
