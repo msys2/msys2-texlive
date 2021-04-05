@@ -29,6 +29,8 @@ jobs:
       - name: Build
         env:
           version: ${{ steps.version.outputs.version }}
+          event: ${{ github.event_name }}
+          tag_act: ${{ github.ref }}
         shell: bash
         run: |
           python download_archives.py scheme-medium texlive-core-$version.tar.xz
@@ -37,40 +39,3 @@ jobs:
         with:
           path: texlive-core-${{ steps.version.outputs.version }}.tar.xz
           name: texlive-core-${{ steps.version.outputs.version }}.tar.xz
-      
-      - name: Install Dependency
-        if: github.event_name == 'release'
-        run: pip install requests
-
-      - name: Get Upload URL
-        id: create_release
-        if: github.event_name == 'release'
-        shell: python
-        env:
-          access_token: ${{ secrets.GITHUB_TOKEN }}
-          tag_act: ${{ github.ref }}
-        run: |
-          import requests
-          import os
-          ref_tag = os.getenv('tag_act').split('/')[-1]
-          access_token = os.getenv('access_token')
-          headers = {
-              "Accept":"application/vnd.github.v3+json",
-              "Authorization": f"token {access_token}"
-          }
-          url = f"https://api.github.com/repos/naveen521kk/msys2-texlive/releases/tags/{ref_tag}"
-          c = requests.get(url,headers=headers)
-          upload_url=c.json()['upload_url']
-          print(f"::set-output name=upload_url::{upload_url}")
-          print(f"::set-output name=tag_name::{ref_tag[1:]}")
-      - name: Upload Release Asset
-        id: upload-release
-        if: github.event_name == 'release'
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: texlive-core-${{ steps.version.outputs.version }}.tar.xz
-          asset_name: texlive-core-${{ steps.version.outputs.version }}.tar.xz
-          asset_content_type: application/x-gtar

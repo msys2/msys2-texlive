@@ -10,6 +10,8 @@ from textwrap import dedent
 
 import requests
 
+from github_handler import upload_asset
+
 logger = logging.getLogger("archive-downloader")
 
 logging.basicConfig(
@@ -195,6 +197,7 @@ def main(scheme, filename):
     download_texlive_tlpdb(mirror)
     # arch uses "scheme-medium"
     download_all_packages(scheme, mirror, filename)
+    upload_asset(filename)
     cleanup()
 
 
@@ -208,4 +211,4 @@ if __name__ == "__main__":
     logger.info("Starting...")
     logger.info("Scheme: %s", args.scheme)
     logger.info("Filename: %s", args.file_name)
-    main(args.scheme, args.file_name)
+    main(args.scheme, Path(args.file_name))

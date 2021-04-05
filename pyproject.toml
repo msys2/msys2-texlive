@@ -7,10 +7,12 @@ authors = ["Naveen M K <naveen@syrusdark.website>"]
 [tool.poetry.dependencies]
 python = "^3.6"
 requests = "^2.25.1"
+PyGithub = "^1.54.1" 
 
 [tool.poetry.dev-dependencies]
 mypy = "^0.790"
 flake8 = "^3.8.4"
+black = {version = "^20.8b1", allow-prereleases = true}
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
