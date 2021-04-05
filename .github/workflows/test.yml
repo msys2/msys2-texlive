@@ -33,6 +33,3 @@ jobs:
       run: |
         python -m poetry run flake8 .
     
-    - name: Run Black
-      run: |
-        python -m poetry run black -c .
