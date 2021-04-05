@@ -9,20 +9,10 @@ from pathlib import Path
 from textwrap import dedent
 
 import requests
-import colorlog
 
-handler = colorlog.StreamHandler()
-handler.setFormatter(
-    colorlog.ColoredFormatter(
-        "%(log_color)s%(message)s",
-        log_colors=colorlog.default_log_colors
-    )
-)
+logger = logging.getLogger("archive-downloader")
 
-logger = colorlog.getLogger("archive-downloaded")
-logger.addHandler(handler)
-
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO,format='%(message)s',datefmt='%Y-%m-%d %H:%M:%S')
 
 perl_to_py_dict_regex = re.compile(r"(?P<key>\S*) (?P<value>[\s\S][^\n]*)")
 
