@@ -124,7 +124,7 @@ def write_contents_file(mirror_url: str, pkgs: dict, file: Path):
     template = dedent(
         """\
     # These are the CTAN packages bundled in this package.
-    # They were downloaded from {url}/archive/
+    # They were downloaded from {url}archive/
     # The svn revision number (on the TeXLive repository)
     # on which each package is based is given in the 2nd column.
 
