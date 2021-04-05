@@ -1,7 +1,6 @@
-name: Build TexLive source
+name: Build TexLive Source
 
 on:
-  push:
   workflow_dispatch:
   release:
     types: [created]
