@@ -19,7 +19,7 @@ jobs:
         id: version
         run: |
           import time
-          version = time.strftime("%Y%d%m")
+          version = time.strftime("%Y%m%d")
           print(f"::set-output name=version::{version}")
 
       - name: Install dependencies
