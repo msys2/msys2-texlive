@@ -219,6 +219,7 @@ def create_fmts(
     ],
     filename_save: Path,
 ) -> Path:
+    logger.info("Creating %s file", filename_save)
     key_value_search_regex = re.compile(r"(?P<key>\S*)=(?P<value>[\S]+)")
     quotes_search_regex = re.compile(
         r"((?<![\\])['\"])(?P<options>(?:.(?!(?<![\\])\1))*.?)\1"
@@ -257,6 +258,52 @@ def create_fmts(
                         )
     with filename_save.open("w", encoding="utf-8") as f:
         f.write(final_file)
+        logger.info("Wrote %s", filename_save)
+    return filename_save
+
+
+def create_maps(
+    pkg_infos: typing.Dict[
+        str, typing.Union[typing.Dict[str, typing.Union[str, list]]]
+    ],
+    filename_save: Path,
+) -> Path:
+    logger.info("Creating %s file", filename_save)
+    final_file = ""
+
+    mixed_map_regex = re.compile(r"add(?P<final>MixedMap[\s\S][^\n]*)")
+    map_regex = re.compile(r"add(?P<final>Map[\s\S][^\n]*)")
+
+    def parse_string(temp: str):
+        if "addMixedMap" in temp:
+            res = mixed_map_regex.search(temp)
+            if res:
+                return res.group("final")
+        elif "addMap" in temp:
+            res = map_regex.search(temp)
+            if res:
+                return res.group("final")
+
+    for pkg in pkg_infos:
+        temp_pkg = pkg_infos[pkg]
+        if "execute" in temp_pkg:
+            temp = temp_pkg["execute"]
+            if "addMap" in temp or "addMixedMap" in temp:
+                if isinstance(temp, str):
+                    final_file += parse_string(temp)
+                    final_file += "\n"
+                else:
+                    for each in temp:
+                        final_file += parse_string(each)
+                        final_file += "\n"
+    # let's sort the line
+    temp_lines = final_file.split("\n")
+    temp_lines.sort()
+    final_file = "\n".join(temp_lines)
+    final_file.strip()
+    with filename_save.open("w", encoding="utf-8") as f:
+        f.write(final_file)
+        logger.info("Wrote %s", filename_save)
     return filename_save
 
 
@@ -264,14 +311,25 @@ def main(scheme: str, directory: Path, package: str):
     mirror = find_mirror()
     logger.info("Using mirror: %s", mirror)
     download_texlive_tlpdb(mirror)
+    
     needed_pkgs = get_needed_packages_with_info(scheme)
     archive_name = directory / get_file_archive_name(package)
+    
     # arch uses "scheme-medium" for texlive-core
     download_all_packages(scheme, mirror, archive_name, needed_pkgs)
+    logger.info("Uploading %s", archive_name)
     upload_asset(archive_name)  # uploads archive
+    
     fmts_file = directory / (package + ".fmts")
     create_fmts(needed_pkgs, fmts_file)
+    logger.info("Uploading %s", fmts_file)
     upload_asset(fmts_file)
+
+    maps_file = directory / (package + ".maps")
+    create_maps(needed_pkgs, maps_file)
+    logger.info("Uploading %s", maps_file)
+    upload_asset(maps_file)
+
     cleanup()
 
 
