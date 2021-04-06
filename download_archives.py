@@ -288,14 +288,16 @@ def create_maps(
         temp_pkg = pkg_infos[pkg]
         if "execute" in temp_pkg:
             temp = temp_pkg["execute"]
-            if "addMap" in temp or "addMixedMap" in temp:
-                if isinstance(temp, str):
+            if isinstance(temp, str):
+                if "addMap" in temp or "addMixedMap" in temp:
                     final_file += parse_string(temp)
-                    final_file += "\n"
-                else:
-                    for each in temp:
+                    final_file += '\n'
+            else:
+                for each in temp:
+                    if "addMap" in each or "addMixedMap" in each:
                         final_file += parse_string(each)
-                        final_file += "\n"
+                        final_file += '\n'
+
     # let's sort the line
     temp_lines = final_file.split("\n")
     temp_lines.sort()
