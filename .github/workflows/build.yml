@@ -23,6 +23,7 @@ jobs:
           version: ${{ steps.version.outputs.version }}
           event: ${{ github.event_name }}
           tag_act: ${{ github.ref }}
+          GITHUB_TOKEN: ${{ github.token }}
         shell: pwsh
         run: |
           mkdir build
