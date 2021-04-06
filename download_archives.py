@@ -311,15 +311,15 @@ def main(scheme: str, directory: Path, package: str):
     mirror = find_mirror()
     logger.info("Using mirror: %s", mirror)
     download_texlive_tlpdb(mirror)
-    
+
     needed_pkgs = get_needed_packages_with_info(scheme)
     archive_name = directory / get_file_archive_name(package)
-    
+
     # arch uses "scheme-medium" for texlive-core
     download_all_packages(scheme, mirror, archive_name, needed_pkgs)
     logger.info("Uploading %s", archive_name)
     upload_asset(archive_name)  # uploads archive
-    
+
     fmts_file = directory / (package + ".fmts")
     create_fmts(needed_pkgs, fmts_file)
     logger.info("Uploading %s", fmts_file)
