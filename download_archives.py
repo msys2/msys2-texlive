@@ -46,6 +46,11 @@ def find_mirror() -> str:
     return url
 
 
+def get_file_archive_name(pacakge: str) -> str:
+    version = time.strftime("%Y%m%d")
+    return f"texlive-core-{version}.tar.xz"
+
+
 def download_texlive_tlpdb(mirror: str) -> None:
     con = requests.get(mirror + "tlpkg/texlive.tlpdb")
     with open("texlive.tlpdb", "wb") as f:
@@ -119,7 +124,9 @@ def get_dependencies(
     return deps_list
 
 
-def get_needed_packages_with_info(scheme: str):
+def get_needed_packages_with_info(
+    scheme: str,
+) -> typing.Dict[str, typing.Union[typing.Dict[str, typing.Union[str, list]]]]:
     logger.info("Resolving scheme %s", scheme)
     pkg_list = get_all_packages()
     deps = get_dependencies(scheme, pkg_list, [])
@@ -184,39 +191,99 @@ def create_tar_archive(path: Path, output_filename: Path):
             tar_handle.add(str(f), recursive=False, arcname=f.name)
 
 
-def download_all_packages(scheme: str, mirror_url: str, final_tar_location: Path):
+def download_all_packages(
+    scheme: str,
+    mirror_url: str,
+    final_tar_location: Path,
+    needed_pkgs: typing.Dict[
+        str, typing.Union[typing.Dict[str, typing.Union[str, list]]]
+    ],
+):
     logger.info("Starting to Download.")
     with tempfile.TemporaryDirectory() as tmpdir_main:
         logger.info("Using tempdir: %s", tmpdir_main)
         tmpdir = Path(tmpdir_main)
-        needed_pkgs = get_needed_packages_with_info(scheme)
+
         write_contents_file(mirror_url, needed_pkgs, tmpdir / "CONTENTS")
         for pkg in needed_pkgs:
             logger.info("Downloading %s", needed_pkgs[pkg]["name"])
-            url = get_url_for_package(needed_pkgs[pkg]["name"], mirror_url)
+            url = get_url_for_package(str(needed_pkgs[pkg]["name"]), mirror_url)
             file_name = tmpdir / Path(url).name
             download_and_retry(url, file_name)
         create_tar_archive(path=tmpdir, output_filename=final_tar_location)
 
 
-def main(scheme, filename):
+def create_fmts(
+    pkg_infos: typing.Dict[
+        str, typing.Union[typing.Dict[str, typing.Union[str, list]]]
+    ],
+    filename_save: Path,
+) -> Path:
+    key_value_search_regex = re.compile(r"(?P<key>\S*)=(?P<value>[\S]+)")
+    quotes_search_regex = re.compile(
+        r"((?<![\\])['\"])(?P<options>(?:.(?!(?<![\\])\1))*.?)\1"
+    )
+    final_file = ""
+
+    def parse_perl_string(temp: str) -> typing.Dict[str, str]:
+        t_dict: typing.Dict[str, str] = {}
+        for mat in key_value_search_regex.finditer(temp):
+            if '"' not in mat.group("value"):
+                t_dict[mat.group("key")] = mat.group("value")
+        quotes_search = quotes_search_regex.search(temp)
+        if quotes_search:
+            t_dict["options"] = quotes_search.group("options")
+        for i in {"name", "engine", "patterns", "options"}:
+            if i not in t_dict:
+                t_dict[i] = "-"
+        return t_dict
+
+    for pkg in pkg_infos:
+        temp_pkg = pkg_infos[pkg]
+        if "execute" in temp_pkg:
+            temp = temp_pkg["execute"]
+            if isinstance(temp, str):
+                if "AddFormat" in temp:
+                    parsed_dict = parse_perl_string(temp)
+                    final_file += "{name} {engine} {patterns} {options}\n".format(
+                        **parsed_dict
+                    )
+            else:
+                for each in temp:
+                    if "AddFormat" in each:
+                        parsed_dict = parse_perl_string(each)
+                        final_file += "{name} {engine} {patterns} {options}\n".format(
+                            **parsed_dict
+                        )
+    with filename_save.open("w", encoding="utf-8") as f:
+        f.write(final_file)
+    return filename_save
+
+
+def main(scheme: str, directory: Path, package: str):
     mirror = find_mirror()
     logger.info("Using mirror: %s", mirror)
     download_texlive_tlpdb(mirror)
-    # arch uses "scheme-medium"
-    download_all_packages(scheme, mirror, filename)
-    upload_asset(filename)
+    needed_pkgs = get_needed_packages_with_info(scheme)
+    archive_name = directory / get_file_archive_name(package)
+    # arch uses "scheme-medium" for texlive-core
+    download_all_packages(scheme, mirror, archive_name, needed_pkgs)
+    upload_asset(archive_name)  # uploads archive
+    fmts_file = directory / (package + ".fmts")
+    create_fmts(needed_pkgs, fmts_file)
+    upload_asset(fmts_file)
     cleanup()
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process some integers.")
-    parser.add_argument("scheme", type=str, help="Scheme for which to Build archive.")
     parser.add_argument(
-        "file_name", type=str, help="Full path to save the resultant file."
+        "package", type=str, help="Tha pacakge to build.", choices=["texlive-core"]
     )
+    parser.add_argument("directory", type=str, help="The directory to save files.")
     args = parser.parse_args()
     logger.info("Starting...")
-    logger.info("Scheme: %s", args.scheme)
-    logger.info("Filename: %s", args.file_name)
-    main(args.scheme, Path(args.file_name))
+    logger.info("Package: %s", args.package)
+    logger.info("Directory: %s", args.directory)
+    if args.package == "texlive-core":
+        main("scheme-medium", Path(args.directory), args.package)

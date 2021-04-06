@@ -14,14 +14,6 @@ jobs:
         with:
           python-version: "3.8"
 
-      - name: Get Version
-        shell: python
-        id: version
-        run: |
-          import time
-          version = time.strftime("%Y%m%d")
-          print(f"::set-output name=version::{version}")
-
       - name: Install dependencies
         run: |
           python -m pip install -r requirements.txt
@@ -31,11 +23,12 @@ jobs:
           version: ${{ steps.version.outputs.version }}
           event: ${{ github.event_name }}
           tag_act: ${{ github.ref }}
-        shell: bash
+        shell: pwsh
         run: |
-          python download_archives.py scheme-medium texlive-core-$version.tar.xz
+          mkdir build
+          python download_archives.py texlive-core $PWD\build
 
       - uses: actions/upload-artifact@v2
         with:
-          path: texlive-core-${{ steps.version.outputs.version }}.tar.xz
-          name: texlive-core-${{ steps.version.outputs.version }}.tar.xz
+          path: build/*
+          name: build-assets
