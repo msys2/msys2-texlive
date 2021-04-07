@@ -92,8 +92,7 @@ def get_all_packages() -> typing.Dict[str, typing.Dict[str, typing.Union[list, s
             tmp = "".join(lines[last_line : n + 1]).strip()
             tmp_dict = parse_perl(tmp)
             name = str(tmp_dict["name"])
-            if "." not in name:
-                package_list[name] = tmp_dict
+            package_list[name] = tmp_dict
             last_line = n
     return package_list
 
@@ -101,27 +100,39 @@ def get_all_packages() -> typing.Dict[str, typing.Dict[str, typing.Union[list, s
 def get_dependencies(
     name: str,
     pkglist: typing.Dict[str, typing.Dict[str, typing.Union[list, str]]],
-    collection_list: typing.List[str],
+    collection_list: typing.List[str] = [],
+    final_deps: typing.List[str] = [],
 ) -> typing.List[str]:
+    if ".ARCH" in name:
+        return []
     pkg: typing.Dict[str, typing.Union[list, str]] = pkglist[name]
-    deps_list = []
     if "depend" not in pkg:
         return []
     dep_name = pkg["depend"]
     if isinstance(dep_name, str):
-        if dep_name not in deps_list:
-            deps_list.append(dep_name)
+        if ".ARCH" in dep_name:
+            return []
+        if dep_name not in final_deps:
+            final_deps.append(dep_name)
+            get_dependencies(dep_name, pkglist, collection_list, final_deps)
+        if "collection" in dep_name or "scheme" in dep_name:
+            collection_list.append(dep_name)
+            get_dependencies(dep_name, pkglist, collection_list, final_deps)
     else:
         for i in pkg["depend"]:
             dep_name = i
+            if ".ARCH" in dep_name:
+                continue
             if "collection" in dep_name or "scheme" in dep_name:
                 if dep_name not in collection_list:
+                    final_deps.append(dep_name)
                     collection_list.append(dep_name)
-                    deps_list += get_dependencies(dep_name, pkglist, collection_list)
+                    get_dependencies(dep_name, pkglist, collection_list, final_deps)
             else:
-                if dep_name not in deps_list:
-                    deps_list.append(dep_name)
-    return deps_list
+                if dep_name not in final_deps:
+                    final_deps.append(dep_name)
+                    get_dependencies(dep_name, pkglist, collection_list, final_deps)
+    return final_deps
 
 
 def get_needed_packages_with_info(
@@ -129,12 +140,11 @@ def get_needed_packages_with_info(
 ) -> typing.Dict[str, typing.Union[typing.Dict[str, typing.Union[str, list]]]]:
     logger.info("Resolving scheme %s", scheme)
     pkg_list = get_all_packages()
-    deps = get_dependencies(scheme, pkg_list, [])
+    deps = get_dependencies(scheme, pkg_list)
     deps.sort()
     deps_info = {}
     for i in deps:
-        if "." not in i:
-            deps_info[i] = pkg_list[i]
+        deps_info[i] = pkg_list[i]
     return deps_info
 
 
