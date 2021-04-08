@@ -263,20 +263,16 @@ def download_all_packages(
         tmpdir = Path(tmpdir_main)
 
         write_contents_file(mirror_url, needed_pkgs, tmpdir / "CONTENTS")
-        # download in 8 threads
+        # download with threads
         with concurrent.futures.ThreadPoolExecutor() as executor:
-            future_to_pkg = {
+            for pkg in needed_pkgs:
                 executor.submit(
                     _internal_download,
                     pkg,
                     needed_pkgs,
                     mirror_url,
                     tmpdir,
-                ): pkg
-                for pkg in needed_pkgs
-            }
-            for future in concurrent.futures.as_completed(future_to_pkg):
-                logger.info("Completed downloading %s", future_to_pkg[future])
+                )
         create_tar_archive(path=tmpdir, output_filename=final_tar_location)
 
 
