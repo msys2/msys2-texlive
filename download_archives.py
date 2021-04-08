@@ -30,7 +30,7 @@ def find_mirror(texlive_info: bool = False) -> str:
     if not texlive_info:
         base_mirror = "http://mirror.ctan.org"
         con = requests.get(base_mirror)
-        return con.history[-1].url + "systems/texlive/tlnet/"
+        return con.url + "systems/texlive/tlnet/"
 
     # maybe let's try texlive.info
     timenow = time.localtime()
@@ -67,8 +67,10 @@ def download_and_retry(url: str, local_filename: Path):
         try:
             download(url, local_filename)
             break
-        except (requests.HTTPError, requests.ConnectionError):
+        except (requests.HTTPError, requests.ConnectionError) as e:
             time.sleep(RETRY_INTERVAL)
+            logger.debug(e)
+
     else:
         raise requests.HTTPError("%s can't be downloaded" % url)
     return True
@@ -82,6 +84,7 @@ def get_file_archive_name(package: str) -> str:
 def download_texlive_tlpdb(mirror: str) -> str:
     url = mirror + "tlpkg/texlive.tlpdb"
     try:
+        logger.info("Downloading texlive.tlpdb")
         download_and_retry(url, Path("texlive.tlpdb"))
     except requests.HTTPError:
         logger.error("%s can't be downloaded" % url)
