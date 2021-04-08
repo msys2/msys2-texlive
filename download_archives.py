@@ -22,6 +22,26 @@ logging.basicConfig(
 
 perl_to_py_dict_regex = re.compile(r"(?P<key>\S*) (?P<value>[\s\S][^\n]*)")
 RETRY_INTERVAL = 10  # in seconds
+PACKAGE_COLLECTION = {
+    "texlive-core": "scheme-medium",
+    "texlive-bibtexextra": "collection-bibtexextra",
+    "texlive-fontsextra": "collection-fontsextra",
+    "texlive-formatsextra": "collection-formatsextra",
+    "texlive-games": "texlive-games",
+    "texlive-humanities": "collection-humanities",
+    "texlive-langchinese": "collection-langchinese",
+    "texlive-langcyrillic": "collection-langcyrillic",
+    "texlive-langextra": "collection-langextra",
+    "texlive-langgreek": "collection-langgreek",
+    "texlive-langjapanese": "collection-langjapanese",
+    "texlive-langkorean": "collection-langkorean",
+    "texlive-latexextra": "collection-latexextra",
+    "texlive-music": "collection-music",
+    "texlive-pictures": "collection-pictures",
+    "texlive-pstricks": "collection-pstricks",
+    "texlive-publishers": "collection-publishers",
+    "texlive-science": "collection-science",
+}
 
 
 def find_mirror(texlive_info: bool = False) -> str:
@@ -370,33 +390,16 @@ def main(scheme: str, directory: Path, package: str):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process some integers.")
     parser.add_argument(
-        "package", type=str, help="Tha pacakge to build.", choices=["texlive-core"]
+        "package",
+        type=str,
+        help="Tha pacakge to build.",
+        choices=PACKAGE_COLLECTION.keys(),
     )
     parser.add_argument("directory", type=str, help="The directory to save files.")
     args = parser.parse_args()
     logger.info("Starting...")
     logger.info("Package: %s", args.package)
     logger.info("Directory: %s", args.directory)
-    PACKAGE_COLLECTION = {
-        "texlive-core": "scheme-medium",
-        "texlive-bibtexextra": "collection-bibtexextra",
-        "texlive-fontsextra": "collection-fontsextra",
-        "texlive-formatsextra": "collection-formatsextra",
-        "texlive-games": "texlive-games",
-        "texlive-humanities": "collection-humanities",
-        "texlive-langchinese": "collection-langchinese",
-        "texlive-langcyrillic": "collection-langcyrillic",
-        "texlive-langextra": "collection-langextra",
-        "texlive-langgreek": "collection-langgreek",
-        "texlive-langjapanese": "collection-langjapanese",
-        "texlive-langkorean": "collection-langkorean",
-        "texlive-latexextra": "collection-latexextra",
-        "texlive-music": "collection-music",
-        "texlive-pictures": "collection-pictures",
-        "texlive-pstricks": "collection-pstricks",
-        "texlive-publishers": "collection-publishers",
-        "texlive-science": "collection-science",
-    }
 
     if args.package in PACKAGE_COLLECTION:
         main(PACKAGE_COLLECTION[args.package], Path(args.directory), args.package)
