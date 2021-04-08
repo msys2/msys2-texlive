@@ -30,7 +30,7 @@ def find_mirror(texlive_info: bool = False) -> str:
     if not texlive_info:
         base_mirror = "http://mirror.ctan.org"
         con = requests.get(base_mirror)
-        return con.history[-1].url + 'systems/texlive/tlnet/'
+        return con.history[-1].url + "systems/texlive/tlnet/"
 
     # maybe let's try texlive.info
     timenow = time.localtime()
@@ -49,7 +49,7 @@ def find_mirror(texlive_info: bool = False) -> str:
     return url
 
 
-def download(url, local_filename):
+def download(url: str, local_filename: Path):
     with requests.get(url, stream=True) as r:
         r.raise_for_status()
         with open(local_filename, "wb") as f:
@@ -60,21 +60,30 @@ def download(url, local_filename):
                 f.write(chunk)
 
 
-def get_file_archive_name(pacakge: str) -> str:
+def download_and_retry(url: str, local_filename: Path):
+    for i in range(10):
+        logger.info("Downloading %s.", url)
+        logger.info("Try: %s", i)
+        try:
+            download(url, local_filename)
+            break
+        except (requests.HTTPError, requests.ConnectionError):
+            time.sleep(RETRY_INTERVAL)
+    else:
+        raise requests.HTTPError("%s can't be downloaded" % url)
+    return True
+
+
+def get_file_archive_name(package: str) -> str:
     version = time.strftime("%Y%m%d")
-    return f"texlive-core-{version}.tar.xz"
+    return f"{package}-{version}.tar.xz"
 
 
 def download_texlive_tlpdb(mirror: str) -> str:
     url = mirror + "tlpkg/texlive.tlpdb"
-    for i in range(10):
-        logger.info("Downloading texlive.tlpdb; Try: %s", i)
-        try:
-            download(url, "texlive.tlpdb")
-            break
-        except requests.HTTPError:
-            time.sleep(RETRY_INTERVAL)
-    else:
+    try:
+        download_and_retry(url, Path("texlive.tlpdb"))
+    except requests.HTTPError:
         logger.error("%s can't be downloaded" % url)
         logger.warning("Falling back to texlive.info")
         mirror = find_mirror(texlive_info=True)
@@ -187,19 +196,6 @@ def write_contents_file(mirror_url: str, pkgs: dict, file: Path):
         template += f"{pkgs[pkg]['name']} {pkgs[pkg]['revision']}\n"
     with open(file, "w") as f:
         f.write(template)
-
-
-def download_and_retry(url: str, local_filename: Path):
-    for i in range(10):
-        logger.info("Downloading %s. Try: %s", url, i)
-        try:
-            download(url, local_filename)
-            break
-        except requests.HTTPError:
-            time.sleep(RETRY_INTERVAL)
-    else:
-        raise Exception("%s can't be downloaded" % url)
-    return True
 
 
 def get_url_for_package(pkgname: str, mirror_url: str):
