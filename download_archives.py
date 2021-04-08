@@ -28,11 +28,11 @@ PACKAGE_COLLECTION = {
     "texlive-bibtexextra": "collection-bibtexextra",
     "texlive-fontsextra": "collection-fontsextra",
     "texlive-formatsextra": "collection-formatsextra",
-    "texlive-games": "texlive-games",
+    "texlive-games": "collection-games",
     "texlive-humanities": "collection-humanities",
     "texlive-langchinese": "collection-langchinese",
     "texlive-langcyrillic": "collection-langcyrillic",
-    "texlive-langextra": "collection-langextra",
+    #"texlive-langextra": "collection-langextra",
     "texlive-langgreek": "collection-langgreek",
     "texlive-langjapanese": "collection-langjapanese",
     "texlive-langkorean": "collection-langkorean",
@@ -41,7 +41,7 @@ PACKAGE_COLLECTION = {
     "texlive-pictures": "collection-pictures",
     "texlive-pstricks": "collection-pstricks",
     "texlive-publishers": "collection-publishers",
-    "texlive-science": "collection-science",
+    "texlive-science": "collection-mathscience",
 }
 
 

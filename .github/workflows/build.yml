@@ -20,7 +20,7 @@ jobs:
             "texlive-humanities",
             "texlive-langchinese",
             "texlive-langcyrillic",
-            "texlive-langextra",
+            #"texlive-langextra",
             "texlive-langgreek",
             "texlive-langjapanese",
             "texlive-langkorean",
