@@ -231,9 +231,9 @@ def get_url_for_package(pkgname: str, mirror_url: str):
 def create_tar_archive(path: Path, output_filename: Path):
     logger.info("Creating tar file.")
     with tarfile.open(output_filename, "w:xz") as tar_handle:
-        for f in path.iterdir():
-            tar_handle.add(str(f), recursive=False, arcname=f.name)
-
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            for f in path.iterdir():
+                executor.submit(tar_handle.add, str(f), recursive=False, arcname=f.name)
 
 def download_all_packages(
     scheme: str,
