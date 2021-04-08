@@ -32,7 +32,7 @@ PACKAGE_COLLECTION = {
     "texlive-humanities": "collection-humanities",
     "texlive-langchinese": "collection-langchinese",
     "texlive-langcyrillic": "collection-langcyrillic",
-    #"texlive-langextra": "collection-langextra",
+    # "texlive-langextra": "collection-langextra",
     "texlive-langgreek": "collection-langgreek",
     "texlive-langjapanese": "collection-langjapanese",
     "texlive-langkorean": "collection-langkorean",
