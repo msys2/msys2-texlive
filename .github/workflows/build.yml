@@ -5,8 +5,32 @@ on:
   release:
     types: [created]
 jobs:
-  texlive-core:
+  texlive-built:
     runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package:
+          [
+            "texlive-core",
+            "texlive-bibtexextra",
+            "texlive-fontsextra",
+            "texlive-formatsextra",
+            "texlive-games",
+            "texlive-humanities",
+            "texlive-langchinese",
+            "texlive-langcyrillic",
+            "texlive-langextra",
+            "texlive-langgreek",
+            "texlive-langjapanese",
+            "texlive-langkorean",
+            "texlive-latexextra",
+            "texlive-music",
+            "texlive-pictures",
+            "texlive-pstricks",
+            "texlive-publishers",
+            "texlive-science",
+          ]
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python
@@ -28,39 +52,9 @@ jobs:
         shell: pwsh
         run: |
           mkdir build
-          python download_archives.py texlive-core $PWD\build
+          python download_archives.py ${{ matrix.package }} $PWD\build
 
       - uses: actions/upload-artifact@v2
         with:
           path: build/*
-          name: build-assets
-
-  texlive-fontsextra:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: "3.8"
-
-      - name: Install dependencies
-        run: |
-          python -m pip install -r requirements.txt
-
-      - name: Download
-        env:
-          version: ${{ steps.version.outputs.version }}
-          event: ${{ github.event_name }}
-          tag_act: ${{ github.ref }}
-          GITHUB_TOKEN: ${{ github.token }}
-          REPO: ${{ github.repository }}
-        shell: pwsh
-        run: |
-          mkdir build
-          python download_archives.py texlive-fontsextra $PWD\build
-
-      - uses: actions/upload-artifact@v2
-        with:
-          path: build/*
-          name: build-assets
+          name: build-assets-${{ matrix.package }}
