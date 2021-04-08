@@ -377,5 +377,26 @@ if __name__ == "__main__":
     logger.info("Starting...")
     logger.info("Package: %s", args.package)
     logger.info("Directory: %s", args.directory)
-    if args.package == "texlive-core":
-        main("scheme-medium", Path(args.directory), args.package)
+    PACKAGE_COLLECTION = {
+        "texlive-core": "scheme-medium",
+        "texlive-bibtexextra": "collection-bibtexextra",
+        "texlive-fontsextra": "collection-fontsextra",
+        "texlive-formatsextra": "collection-formatsextra",
+        "texlive-games": "texlive-games",
+        "texlive-humanities": "collection-humanities",
+        "texlive-langchinese": "collection-langchinese",
+        "texlive-langcyrillic": "collection-langcyrillic",
+        "texlive-langextra": "collection-langextra",
+        "texlive-langgreek": "collection-langgreek",
+        "texlive-langjapanese": "collection-langjapanese",
+        "texlive-langkorean": "collection-langkorean",
+        "texlive-latexextra": "collection-latexextra",
+        "texlive-music": "collection-music",
+        "texlive-pictures": "collection-pictures",
+        "texlive-pstricks": "collection-pstricks",
+        "texlive-publishers": "collection-publishers",
+        "texlive-science": "collection-science",
+    }
+
+    if args.package in PACKAGE_COLLECTION:
+        main(PACKAGE_COLLECTION[args.package], Path(args.directory), args.package)
