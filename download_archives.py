@@ -1,4 +1,5 @@
 import argparse
+import concurrent.futures
 import logging
 import re
 import tarfile
@@ -243,16 +244,39 @@ def download_all_packages(
     ],
 ):
     logger.info("Starting to Download.")
+
+    def _internal_download(
+        pkg: str,
+        needed_pkgs: typing.Dict[
+            str, typing.Union[typing.Dict[str, typing.Union[str, list]]]
+        ],
+        mirror_url: str,
+        tmpdir: Path,
+    ):
+        logger.info("Downloading %s", needed_pkgs[pkg]["name"])
+        url = get_url_for_package(str(needed_pkgs[pkg]["name"]), mirror_url)
+        file_name = tmpdir / Path(url).name
+        download_and_retry(url, file_name)
+
     with tempfile.TemporaryDirectory() as tmpdir_main:
         logger.info("Using tempdir: %s", tmpdir_main)
         tmpdir = Path(tmpdir_main)
 
         write_contents_file(mirror_url, needed_pkgs, tmpdir / "CONTENTS")
-        for pkg in needed_pkgs:
-            logger.info("Downloading %s", needed_pkgs[pkg]["name"])
-            url = get_url_for_package(str(needed_pkgs[pkg]["name"]), mirror_url)
-            file_name = tmpdir / Path(url).name
-            download_and_retry(url, file_name)
+        # download in 8 threads
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            future_to_pkg = {
+                executor.submit(
+                    _internal_download,
+                    pkg,
+                    needed_pkgs,
+                    mirror_url,
+                    tmpdir,
+                ): pkg
+                for pkg in needed_pkgs
+            }
+            for future in concurrent.futures.as_completed(future_to_pkg):
+                logger.info("Completed downloading %s", future_to_pkg[future])
         create_tar_archive(path=tmpdir, output_filename=final_tar_location)
 
 
@@ -368,6 +392,8 @@ def main(scheme: str, directory: Path, package: str):
 
     needed_pkgs = get_needed_packages_with_info(scheme)
     archive_name = directory / get_file_archive_name(package)
+
+    logger.info("Number of needed Packages: %s", len(needed_pkgs))
 
     # arch uses "scheme-medium" for texlive-core
     download_all_packages(scheme, mirror, archive_name, needed_pkgs)
