@@ -21,14 +21,17 @@ logging.basicConfig(
 )
 
 perl_to_py_dict_regex = re.compile(r"(?P<key>\S*) (?P<value>[\s\S][^\n]*)")
+RETRY_INTERVAL = 10  # in seconds
 
 
-def find_mirror() -> str:
+def find_mirror(texlive_info: bool = False) -> str:
     """Find a mirror and lock to it. Or else things could
     go weird."""
-    # base_mirror = "http://mirror.ctan.org/systems/texlive/tlnet"
-    # con = requests.get(base_mirror)
-    # return con.history[-1].url
+    if not texlive_info:
+        base_mirror = "http://mirror.ctan.org/systems/texlive/tlnet"
+        con = requests.get(base_mirror)
+        return con.history[-1].url
+
     # maybe let's try texlive.info
     timenow = time.localtime()
     url = "https://texlive.info/tlnet-archive/%d/%02d/%02d/tlnet/" % (
@@ -46,16 +49,38 @@ def find_mirror() -> str:
     return url
 
 
+def download(url, local_filename):
+    with requests.get(url, stream=True) as r:
+        r.raise_for_status()
+        with open(local_filename, "wb") as f:
+            for chunk in r.iter_content(chunk_size=8192):
+                # If you have chunk encoded response uncomment if
+                # and set chunk_size parameter to None.
+                # if chunk:
+                f.write(chunk)
+
+
 def get_file_archive_name(pacakge: str) -> str:
     version = time.strftime("%Y%m%d")
     return f"texlive-core-{version}.tar.xz"
 
 
-def download_texlive_tlpdb(mirror: str) -> None:
-    con = requests.get(mirror + "tlpkg/texlive.tlpdb")
-    with open("texlive.tlpdb", "wb") as f:
-        f.write(con.content)
+def download_texlive_tlpdb(mirror: str) -> str:
+    url = mirror + "tlpkg/texlive.tlpdb"
+    for i in range(10):
+        logger.info("Downloading texlive.tlpdb; Try: %s", i)
+        try:
+            download(url, "texlive.tlpdb")
+            break
+        except requests.HTTPError:
+            time.sleep(RETRY_INTERVAL)
+    else:
+        logger.error("%s can't be downloaded" % url)
+        logger.warning("Falling back to texlive.info")
+        mirror = find_mirror(texlive_info=True)
+        return download_texlive_tlpdb(mirror)
     logger.info("Downloaded texlive.tlpdb")
+    return mirror
 
 
 def cleanup():
@@ -164,17 +189,6 @@ def write_contents_file(mirror_url: str, pkgs: dict, file: Path):
         f.write(template)
 
 
-def download(url, local_filename):
-    with requests.get(url, stream=True) as r:
-        r.raise_for_status()
-        with open(local_filename, "wb") as f:
-            for chunk in r.iter_content(chunk_size=8192):
-                # If you have chunk encoded response uncomment if
-                # and set chunk_size parameter to None.
-                # if chunk:
-                f.write(chunk)
-
-
 def download_and_retry(url: str, local_filename: Path):
     for i in range(10):
         logger.info("Downloading %s. Try: %s", url, i)
@@ -182,7 +196,7 @@ def download_and_retry(url: str, local_filename: Path):
             download(url, local_filename)
             break
         except requests.HTTPError:
-            pass
+            time.sleep(RETRY_INTERVAL)
     else:
         raise Exception("%s can't be downloaded" % url)
     return True
@@ -331,7 +345,7 @@ def create_maps(
 def main(scheme: str, directory: Path, package: str):
     mirror = find_mirror()
     logger.info("Using mirror: %s", mirror)
-    download_texlive_tlpdb(mirror)
+    mirror = download_texlive_tlpdb(mirror)
 
     needed_pkgs = get_needed_packages_with_info(scheme)
     archive_name = directory / get_file_archive_name(package)
