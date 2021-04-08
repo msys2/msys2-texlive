@@ -28,9 +28,9 @@ def find_mirror(texlive_info: bool = False) -> str:
     """Find a mirror and lock to it. Or else things could
     go weird."""
     if not texlive_info:
-        base_mirror = "http://mirror.ctan.org/systems/texlive/tlnet"
+        base_mirror = "http://mirror.ctan.org"
         con = requests.get(base_mirror)
-        return con.history[-1].url
+        return con.history[-1].url + 'systems/texlive/tlnet/'
 
     # maybe let's try texlive.info
     timenow = time.localtime()
