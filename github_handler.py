@@ -8,7 +8,7 @@ from github import Github
 from github.GithubException import GithubException
 from github.Repository import Repository
 
-REPO = "msys2/msys2-texlive"
+REPO = os.getenv("REPO", "msys2/msys2-texlive")
 
 _PathLike = Union[os.PathLike, AnyStr]
 
