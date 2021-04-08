@@ -281,6 +281,7 @@ def create_maps(
     logger.info("Creating %s file", filename_save)
     final_file = ""
 
+    kanji_map_regex = re.compile(r"add(?P<final>KanjiMap[\s\S][^\n]*)")
     mixed_map_regex = re.compile(r"add(?P<final>MixedMap[\s\S][^\n]*)")
     map_regex = re.compile(r"add(?P<final>Map[\s\S][^\n]*)")
 
@@ -293,18 +294,26 @@ def create_maps(
             res = map_regex.search(temp)
             if res:
                 return res.group("final")
+        elif "addKanjiMap" in temp:
+            res = kanji_map_regex.search(temp)
+            if res:
+                return res.group("final")
 
     for pkg in pkg_infos:
         temp_pkg = pkg_infos[pkg]
         if "execute" in temp_pkg:
             temp = temp_pkg["execute"]
             if isinstance(temp, str):
-                if "addMap" in temp or "addMixedMap" in temp:
+                if "addMap" in temp or "addMixedMap" in temp or "addKanjiMap" in temp:
                     final_file += parse_string(temp)
                     final_file += "\n"
             else:
                 for each in temp:
-                    if "addMap" in each or "addMixedMap" in each:
+                    if (
+                        "addMap" in each
+                        or "addMixedMap" in each
+                        or "addKanjiMap" in each
+                    ):
                         final_file += parse_string(each)
                         final_file += "\n"
 
