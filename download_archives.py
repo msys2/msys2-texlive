@@ -1,3 +1,16 @@
+"""
+
+    download_archives.py
+    ~~~~~~~~~~~~~~~~~~~~
+
+    A utility to download required archives for texlive-packages
+    by parsing `texlive.tlpdb` and creating `.fmts` and `.maps`
+    from the parsed package. It downloads everything in directory
+    specified and create a `.tar.xz` from them and uploades to
+    Github Release. See `.github/workflows/build.yml` on how this
+    works on Github Actions.
+
+"""
 import argparse
 import concurrent.futures
 import logging
@@ -46,8 +59,24 @@ PACKAGE_COLLECTION = {
 
 
 def find_mirror(texlive_info: bool = False) -> str:
-    """Find a mirror and lock to it. Or else things could
-    go weird."""
+    """Find a mirror and lock to it. Final fallback
+    is texlive.info
+
+    This is important because we shouldn't be changing mirrors
+    randomly, rather we should fix to one which is working or
+    fallback to.
+
+    Parameters
+    ----------
+    texlive_info : bool, optional
+        Whether to use http://texlive.info?, by default False
+
+    Returns
+    -------
+    str
+        The mirror URL which should point to ``tlnet`` folder
+        in the mirror.
+    """
     if not texlive_info:
         base_mirror = "http://mirror.ctan.org"
         con = requests.get(base_mirror)
@@ -75,9 +104,6 @@ def download(url: str, local_filename: Path):
         r.raise_for_status()
         with open(local_filename, "wb") as f:
             for chunk in r.iter_content(chunk_size=8192):
-                # If you have chunk encoded response uncomment if
-                # and set chunk_size parameter to None.
-                # if chunk:
                 f.write(chunk)
 
 
@@ -103,6 +129,20 @@ def get_file_archive_name(package: str) -> str:
 
 
 def download_texlive_tlpdb(mirror: str) -> str:
+    """This function download
+    ``texlive.tlpdf`` from the :attr:mirror passed.
+    This is later used in parsing and while downloading.
+
+    Parameters
+    ----------
+    mirror : str
+        The mirror URL.
+
+    Returns
+    -------
+    str
+        The mirror URL finally used.
+    """
     url = mirror + "tlpkg/texlive.tlpdb"
     try:
         logger.info("Downloading texlive.tlpdb")
@@ -382,6 +422,22 @@ def create_maps(
 
 
 def main(scheme: str, directory: Path, package: str):
+    """This is the main entrypoint
+
+    This program will parse and download archives from
+    CTAN which can be used while packaging texlive.
+
+    Parameters
+    ----------
+    scheme : str
+        The scheme or collection to search for. It can be
+        anything which it available in ``texlive.tlpsrc``.
+    directory : Path
+        The directory to save files downloaded.
+    package : str
+        The package name you are packaging. It will be used
+        in file name.
+    """
     try:
         mirror = find_mirror()
         logger.info("Using mirror: %s", mirror)
