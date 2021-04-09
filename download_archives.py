@@ -235,7 +235,6 @@ def create_tar_archive(path: Path, output_filename: Path):
             tar_handle.add(str(f), recursive=False, arcname=f.name)
 
 
-
 def download_all_packages(
     scheme: str,
     mirror_url: str,
@@ -383,20 +382,36 @@ def create_maps(
 
 
 def main(scheme: str, directory: Path, package: str):
-    mirror = find_mirror()
-    logger.info("Using mirror: %s", mirror)
-    mirror = download_texlive_tlpdb(mirror)
+    try:
+        mirror = find_mirror()
+        logger.info("Using mirror: %s", mirror)
+        mirror = download_texlive_tlpdb(mirror)
 
-    needed_pkgs = get_needed_packages_with_info(scheme)
-    archive_name = directory / get_file_archive_name(package)
+        needed_pkgs = get_needed_packages_with_info(scheme)
+        archive_name = directory / get_file_archive_name(package)
 
-    logger.info("Number of needed Packages: %s", len(needed_pkgs))
+        logger.info("Number of needed Packages: %s", len(needed_pkgs))
 
-    # arch uses "scheme-medium" for texlive-core
-    download_all_packages(scheme, mirror, archive_name, needed_pkgs)
-    logger.info("Uploading %s", archive_name)
-    upload_asset(archive_name)  # uploads archive
+        # arch uses "scheme-medium" for texlive-core
+        download_all_packages(scheme, mirror, archive_name, needed_pkgs)
+        logger.info("Uploading %s", archive_name)
+        upload_asset(archive_name)  # uploads archive
+    except requests.HTTPError as e:
+        logger.error("Failed with: %s", e)
+        logger.warning("Retrying with texlive.info")
+        mirror = find_mirror(texlive_info=True)
+        logger.info("Using mirror: %s", mirror)
+        mirror = download_texlive_tlpdb(mirror)
 
+        needed_pkgs = get_needed_packages_with_info(scheme)
+        archive_name = directory / get_file_archive_name(package)
+
+        logger.info("Number of needed Packages: %s", len(needed_pkgs))
+
+        # arch uses "scheme-medium" for texlive-core
+        download_all_packages(scheme, mirror, archive_name, needed_pkgs)
+        logger.info("Uploading %s", archive_name)
+        upload_asset(archive_name)  # uploads archive
     fmts_file = directory / (package + ".fmts")
     create_fmts(needed_pkgs, fmts_file)
     logger.info("Uploading %s", fmts_file)
