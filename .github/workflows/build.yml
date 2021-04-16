@@ -75,4 +75,4 @@ jobs:
       
       - name: Update Release Body
         run: |
-          python update_release_body.py
+          python scripts/update_release_body.py
