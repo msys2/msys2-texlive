@@ -5,7 +5,7 @@ description = ""
 authors = ["Naveen M K <naveen@syrusdark.website>"]
 
 [tool.poetry.dependencies]
-python = "^3.6"
+python = "^3.7"
 requests = "^2.25.1"
 PyGithub = "^1.54.1" 
 
