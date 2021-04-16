@@ -1,16 +1,14 @@
 import os
 import sys
-import re
 from os import environ
 from pathlib import Path
 from typing import Any, AnyStr, Dict, List, Union
-from textwrap import dedent
+
 from github import Github
 from github.GithubException import GithubException
 from github.GitRelease import GitRelease
 from github.GitReleaseAsset import GitReleaseAsset
 from github.Repository import Repository
-from .utils import find_checksum_from_file
 
 REPO = os.getenv("REPO", "msys2/msys2-texlive")
 
@@ -55,45 +53,6 @@ def get_release_assets(release: GitRelease) -> List[GitReleaseAsset]:
     return assets
 
 
-def update_readme(asset_name: str, path: Path, release: GitRelease):
-    checksum = find_checksum_from_file(path, "sha256")
-    release_body = release.body
-    if release.body == "":
-        content = dedent(
-            f"""
-            MSYS2 TexLive Release v{release.title}
-            <!--checksum-start-->
-            ```
-            {checksum} {asset_name}
-            ```
-            <!--checksum-end-->
-            """
-        )
-    else:
-        pattern = re.compile(
-            r"<!--checksum-start-->\n```(?P<checksum>[^`]*)```\n<!--checksum-end-->",
-            re.MULTILINE,
-        )
-
-        def add_checksum(matchobj: re.Match):
-            return dedent(
-                f"""\
-            <!--checksum-start-->
-            ```
-            {matchobj.group('checksum')}
-            {checksum} {asset_name}
-            ```
-            <!--checksum-end-->
-            """
-            )
-
-        content = pattern.sub(release_body, add_checksum)
-    release.update_release(
-        name=release.tag_name,
-        message=content,
-    )
-
-
 def upload_asset(path: _PathLike) -> None:
     if whether_to_upload():
         path = Path(path)
@@ -116,6 +75,5 @@ def upload_asset(path: _PathLike) -> None:
             # try again
             upload()
         print(f"Uploaded {asset_name} as {asset_label}")
-        update_readme(asset_name, path, release)
     else:
         print("[Warning] Not upload Release Asset.", file=sys.stderr)
