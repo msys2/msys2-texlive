@@ -3,8 +3,9 @@ import shutil
 import time
 from pathlib import Path
 from textwrap import dedent
-
+from .requests_handler import download_and_retry
 from .logger import logger
+import tempfile
 
 
 def get_file_archive_name(package: str) -> str:
@@ -49,3 +50,11 @@ def find_checksum_from_file(fname: Path, hashtype: str):
         for chunk in iter(lambda: f.read(4096), b""):
             hash.update(chunk)
     return hash.hexdigest()
+
+
+def find_checksum_from_url(url: str, hashtype: str):
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tempdir = Path(tmpdir)
+        file = tempdir / Path(url).name
+        download_and_retry(url, file)
+        return find_checksum_from_file(file, hashtype)
