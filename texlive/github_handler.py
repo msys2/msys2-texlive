@@ -1,15 +1,17 @@
 import os
-import sys
 import re
+import sys
 from os import environ
 from pathlib import Path
-from typing import Any, AnyStr, Dict, List, Union
 from textwrap import dedent
+from typing import Any, AnyStr, Dict, List, Union
+
 from github import Github
 from github.GithubException import GithubException
 from github.GitRelease import GitRelease
 from github.GitReleaseAsset import GitReleaseAsset
 from github.Repository import Repository
+
 from .utils import find_checksum_from_file
 
 REPO = os.getenv("REPO", "msys2/msys2-texlive")
@@ -87,7 +89,7 @@ def update_readme(asset_name: str, path: Path, release: GitRelease):
             """
             )
 
-        content = pattern.sub(release_body, add_checksum)
+        content = pattern.sub(add_checksum, release_body)
     release.update_release(
         name=release.tag_name,
         message=content,
