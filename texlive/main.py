@@ -25,7 +25,12 @@ from .constants import perl_to_py_dict_regex
 from .github_handler import upload_asset
 from .logger import logger
 from .requests_handler import download_and_retry, find_mirror
-from .utils import cleanup, get_file_archive_name, write_contents_file
+from .utils import (
+    cleanup,
+    get_file_archive_name,
+    get_url_for_package,
+    write_contents_file,
+)
 from .verify_files import check_sha512_sums, validate_gpg
 
 
@@ -158,12 +163,6 @@ def get_needed_packages_with_info(
     return deps_info
 
 
-def get_url_for_package(pkgname: str, mirror_url: str):
-    if mirror_url[-1] == "/":
-        return mirror_url + "archive/" + pkgname + ".tar.xz"
-    return mirror_url + "/archive/" + pkgname + ".tar.xz"
-
-
 def create_tar_archive(path: Path, output_filename: Path):
     logger.info("Creating tar file.")
     with tarfile.open(output_filename, "w:xz") as tar_handle:
@@ -193,6 +192,8 @@ def download_all_packages(
         url = get_url_for_package(str(needed_pkgs[pkg]["name"]), mirror_url)
         file_name = tmpdir / Path(url).name
         download_and_retry(url, file_name)
+        needed_checksum = str(needed_pkgs[pkg]["containerchecksum"])
+        check_sha512_sums(file_name, needed_checksum)
 
     with tempfile.TemporaryDirectory() as tmpdir_main:
         logger.info("Using tempdir: %s", tmpdir_main)

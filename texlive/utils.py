@@ -12,6 +12,12 @@ def get_file_archive_name(package: str) -> str:
     return f"{package}-{version}.tar.xz"
 
 
+def get_url_for_package(pkgname: str, mirror_url: str):
+    if mirror_url[-1] == "/":
+        return mirror_url + "archive/" + pkgname + ".tar.xz"
+    return mirror_url + "/archive/" + pkgname + ".tar.xz"
+
+
 def cleanup():
     logger.info("Cleaning up.")
     Path("texlive.tlpdb").unlink()
