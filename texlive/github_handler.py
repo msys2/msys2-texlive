@@ -2,10 +2,12 @@ import os
 import sys
 from os import environ
 from pathlib import Path
-from typing import Any, AnyStr, Dict, Union
+from typing import Any, AnyStr, Dict, List, Union
 
 from github import Github
 from github.GithubException import GithubException
+from github.GitRelease import GitRelease
+from github.GitReleaseAsset import GitReleaseAsset
 from github.Repository import Repository
 
 REPO = os.getenv("REPO", "msys2/msys2-texlive")
@@ -44,6 +46,13 @@ def whether_to_upload() -> bool:
     return False
 
 
+def get_release_assets(release: GitRelease) -> List[GitReleaseAsset]:
+    assets = []
+    for asset in release.get_assets():
+        assets.append(asset)
+    return assets
+
+
 def upload_asset(path: _PathLike) -> None:
     if whether_to_upload():
         path = Path(path)
@@ -56,6 +65,10 @@ def upload_asset(path: _PathLike) -> None:
         def upload() -> None:
             release.upload_asset(str(path), label=asset_label, name=asset_name)
 
+        for asset in get_release_assets(release):
+            if asset_name == asset.name:
+                asset.delete_asset()
+                break
         try:
             upload()
         except GithubException:
