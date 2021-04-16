@@ -1,21 +1,16 @@
 import subprocess
-import tempfile
 from pathlib import Path
 
-from .constants import TEXLIVE_GPG_PUBLIC_KEY_URL
 from .logger import logger
-from .requests_handler import download
 from .utils import check_whether_gpg_exists, find_checksum_from_file
 
 
 def import_texlive_gpg_key():
-    with tempfile.TemporaryDirectory() as tempdir:
-        download(TEXLIVE_GPG_PUBLIC_KEY_URL, Path(tempdir) / "texlive.gpg")
-        subprocess.run(
-            ["gpg", "--import", str(Path(tempdir) / "texlive.gpg")],
-            cwd=tempdir,
-            check=True,
-        )
+    subprocess.run(
+        ["gpg", "--import", str(Path(__file__).parent.resolve() / "texlive.asc")],
+        cwd=Path(__file__).parent.resolve(),
+        check=True,
+    )
 
 
 def intialise_gpg():

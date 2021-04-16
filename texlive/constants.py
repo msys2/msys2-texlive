@@ -22,4 +22,3 @@ PACKAGE_COLLECTION = {
     "texlive-publishers": "collection-publishers",
     "texlive-science": "collection-mathscience",
 }
-TEXLIVE_GPG_PUBLIC_KEY_URL = "https://tug.org/texlive/files/texlive.asc"
