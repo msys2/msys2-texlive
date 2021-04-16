@@ -5,7 +5,7 @@ from .constants import PACKAGE_COLLECTION
 from .logger import logger
 from .main import main_laucher
 
-parser = argparse.ArgumentParser(description="Process some integers.")
+parser = argparse.ArgumentParser(description="Prepare texlive archives.")
 parser.add_argument(
     "package",
     type=str,
