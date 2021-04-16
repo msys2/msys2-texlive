@@ -11,121 +11,27 @@
     works on Github Actions.
 
 """
-import argparse
 import concurrent.futures
-import logging
 import re
+import shutil
 import tarfile
 import tempfile
-import time
 import typing
 from pathlib import Path
-from textwrap import dedent
 
 import requests
 
-from github_handler import upload_asset
-
-logger = logging.getLogger("archive-downloader")
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(message)s",
-    datefmt="%Y-%m-%d-%H:%M:%S",
+from .constants import perl_to_py_dict_regex
+from .github_handler import upload_asset
+from .logger import logger
+from .requests_handler import download_and_retry, find_mirror
+from .utils import (
+    cleanup,
+    get_file_archive_name,
+    get_url_for_package,
+    write_contents_file,
 )
-
-perl_to_py_dict_regex = re.compile(r"(?P<key>\S*) (?P<value>[\s\S][^\n]*)")
-RETRY_INTERVAL = 10  # in seconds
-PACKAGE_COLLECTION = {
-    "texlive-core": "scheme-medium",
-    "texlive-bibtexextra": "collection-bibtexextra",
-    "texlive-fontsextra": "collection-fontsextra",
-    "texlive-formatsextra": "collection-formatsextra",
-    "texlive-games": "collection-games",
-    "texlive-humanities": "collection-humanities",
-    "texlive-langchinese": "collection-langchinese",
-    "texlive-langcyrillic": "collection-langcyrillic",
-    # "texlive-langextra": "collection-langextra",
-    "texlive-langgreek": "collection-langgreek",
-    "texlive-langjapanese": "collection-langjapanese",
-    "texlive-langkorean": "collection-langkorean",
-    "texlive-latexextra": "collection-latexextra",
-    "texlive-music": "collection-music",
-    "texlive-pictures": "collection-pictures",
-    "texlive-pstricks": "collection-pstricks",
-    "texlive-publishers": "collection-publishers",
-    "texlive-science": "collection-mathscience",
-}
-
-
-def find_mirror(texlive_info: bool = False) -> str:
-    """Find a mirror and lock to it. Final fallback
-    is texlive.info
-
-    This is important because we shouldn't be changing mirrors
-    randomly, rather we should fix to one which is working or
-    fallback to.
-
-    Parameters
-    ----------
-    texlive_info : bool, optional
-        Whether to use http://texlive.info?, by default False
-
-    Returns
-    -------
-    str
-        The mirror URL which should point to ``tlnet`` folder
-        in the mirror.
-    """
-    if not texlive_info:
-        base_mirror = "http://mirror.ctan.org"
-        con = requests.get(base_mirror)
-        return con.url + "systems/texlive/tlnet/"
-
-    # maybe let's try texlive.info
-    timenow = time.localtime()
-    url = "https://texlive.info/tlnet-archive/%d/%02d/%02d/tlnet/" % (
-        timenow.tm_year,
-        timenow.tm_mon,
-        timenow.tm_mday,
-    )
-    con = requests.get(url)
-    if con.status_code == 404:
-        return "https://texlive.info/tlnet-archive/%d/%02d/%02d/tlnet/" % (
-            timenow.tm_year,
-            timenow.tm_mon,
-            timenow.tm_mday - 1,
-        )
-    return url
-
-
-def download(url: str, local_filename: Path):
-    with requests.get(url, stream=True) as r:
-        r.raise_for_status()
-        with open(local_filename, "wb") as f:
-            for chunk in r.iter_content(chunk_size=8192):
-                f.write(chunk)
-
-
-def download_and_retry(url: str, local_filename: Path):
-    for i in range(10):
-        logger.info("Downloading %s.", url)
-        logger.info("Try: %s", i)
-        try:
-            download(url, local_filename)
-            break
-        except (requests.HTTPError, requests.ConnectionError) as e:
-            time.sleep(RETRY_INTERVAL)
-            logger.debug(e)
-
-    else:
-        raise requests.HTTPError("%s can't be downloaded" % url)
-    return True
-
-
-def get_file_archive_name(package: str) -> str:
-    version = time.strftime("%Y%m%d")
-    return f"{package}-{version}.tar.xz"
+from .verify_files import check_sha512_sums, validate_gpg
 
 
 def download_texlive_tlpdb(mirror: str) -> str:
@@ -143,22 +49,33 @@ def download_texlive_tlpdb(mirror: str) -> str:
     str
         The mirror URL finally used.
     """
-    url = mirror + "tlpkg/texlive.tlpdb"
-    try:
-        logger.info("Downloading texlive.tlpdb")
-        download_and_retry(url, Path("texlive.tlpdb"))
-    except requests.HTTPError:
-        logger.error("%s can't be downloaded" % url)
-        logger.warning("Falling back to texlive.info")
-        mirror = find_mirror(texlive_info=True)
-        return download_texlive_tlpdb(mirror)
-    logger.info("Downloaded texlive.tlpdb")
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tempdir = Path(tmpdir)
+        temp_file = tempdir / "texlive.tlpdb"
+        texlive_tlpdb = mirror + "tlpkg/texlive.tlpdb"
+        texlive_tlpdb_sha512 = mirror + "tlpkg/texlive.tlpdb.sha512"
+        texlive_tlpdb_sha512_asc = mirror + "tlpkg/texlive.tlpdb.sha512.asc"
+        try:
+            logger.info("Downloading texlive.tlpdb")
+            download_and_retry(texlive_tlpdb, temp_file)
+        except requests.HTTPError:
+            logger.error("%s can't be downloaded" % texlive_tlpdb)
+            logger.warning("Falling back to texlive.info")
+            mirror = find_mirror(texlive_info=True)
+            return download_texlive_tlpdb(mirror)
+        logger.info("Downloaded texlive.tlpdb")
+
+        file_to_check = tempdir / "texlive.tlpdb.sha512"
+        signature_file = tempdir / "texlive.tlpdb.sha512.asc"
+        download_and_retry(texlive_tlpdb_sha512, file_to_check)
+        download_and_retry(texlive_tlpdb_sha512_asc, signature_file)
+        validate_gpg(file_to_check, signature_file)
+
+        with open(file_to_check, encoding="utf-8") as f:
+            needed_sha512sum = f.read().split()[0]
+        check_sha512_sums(temp_file, needed_sha512sum)
+        shutil.copy(temp_file, Path("texlive.tlpdb"))
     return mirror
-
-
-def cleanup():
-    logger.info("Cleaning up.")
-    Path("texlive.tlpdb").unlink()
 
 
 def parse_perl(perl_code) -> typing.Dict[str, typing.Union[list, str]]:
@@ -246,28 +163,6 @@ def get_needed_packages_with_info(
     return deps_info
 
 
-def write_contents_file(mirror_url: str, pkgs: dict, file: Path):
-    template = dedent(
-        """\
-    # These are the CTAN packages bundled in this package.
-    # They were downloaded from {url}archive/
-    # The svn revision number (on the TeXLive repository)
-    # on which each package is based is given in the 2nd column.
-
-    """
-    ).format(url=mirror_url)
-    for pkg in pkgs:
-        template += f"{pkgs[pkg]['name']} {pkgs[pkg]['revision']}\n"
-    with open(file, "w") as f:
-        f.write(template)
-
-
-def get_url_for_package(pkgname: str, mirror_url: str):
-    if mirror_url[-1] == "/":
-        return mirror_url + "archive/" + pkgname + ".tar.xz"
-    return mirror_url + "/archive/" + pkgname + ".tar.xz"
-
-
 def create_tar_archive(path: Path, output_filename: Path):
     logger.info("Creating tar file.")
     with tarfile.open(output_filename, "w:xz") as tar_handle:
@@ -297,6 +192,8 @@ def download_all_packages(
         url = get_url_for_package(str(needed_pkgs[pkg]["name"]), mirror_url)
         file_name = tmpdir / Path(url).name
         download_and_retry(url, file_name)
+        needed_checksum = str(needed_pkgs[pkg]["containerchecksum"])
+        check_sha512_sums(file_name, needed_checksum)
 
     with tempfile.TemporaryDirectory() as tmpdir_main:
         logger.info("Using tempdir: %s", tmpdir_main)
@@ -421,7 +318,7 @@ def create_maps(
     return filename_save
 
 
-def main(scheme: str, directory: Path, package: str):
+def main_laucher(scheme: str, directory: Path, package: str):
     """This is the main entrypoint
 
     This program will parse and download archives from
@@ -479,21 +376,3 @@ def main(scheme: str, directory: Path, package: str):
     upload_asset(maps_file)
 
     cleanup()
-
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Process some integers.")
-    parser.add_argument(
-        "package",
-        type=str,
-        help="Tha pacakge to build.",
-        choices=PACKAGE_COLLECTION.keys(),
-    )
-    parser.add_argument("directory", type=str, help="The directory to save files.")
-    args = parser.parse_args()
-    logger.info("Starting...")
-    logger.info("Package: %s", args.package)
-    logger.info("Directory: %s", args.directory)
-
-    if args.package in PACKAGE_COLLECTION:
-        main(PACKAGE_COLLECTION[args.package], Path(args.directory), args.package)

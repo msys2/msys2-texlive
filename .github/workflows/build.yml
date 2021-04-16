@@ -52,7 +52,7 @@ jobs:
         shell: pwsh
         run: |
           mkdir build
-          python download_archives.py ${{ matrix.package }} $PWD\build
+          python -m texlive ${{ matrix.package }} $PWD\build
 
       - uses: actions/upload-artifact@v2
         with:
