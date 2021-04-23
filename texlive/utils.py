@@ -1,11 +1,13 @@
 import hashlib
 import shutil
+import tarfile
+import tempfile
 import time
 from pathlib import Path
 from textwrap import dedent
-from .requests_handler import download_and_retry
+
 from .logger import logger
-import tempfile
+from .requests_handler import download_and_retry
 
 
 def get_file_archive_name(package: str) -> str:
@@ -58,3 +60,10 @@ def find_checksum_from_url(url: str, hashtype: str):
         file = tempdir / Path(url).name
         download_and_retry(url, file)
         return find_checksum_from_file(file, hashtype)
+
+
+def create_tar_archive(path: Path, output_filename: Path):
+    logger.info("Creating tar file.")
+    with tarfile.open(output_filename, "w:xz") as tar_handle:
+        for f in path.iterdir():
+            tar_handle.add(str(f), recursive=False, arcname=f.name)

@@ -132,3 +132,5 @@ dmypy.json
 # texlive things
 *.tar.gz
 *.tlpdb
+*.dat
+*.def
