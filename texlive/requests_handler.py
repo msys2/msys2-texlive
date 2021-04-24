@@ -29,8 +29,8 @@ def find_mirror(texlive_info: bool = False) -> str:
         in the mirror.
     """
     if not texlive_info:
-        base_mirror = "http://mirror.ctan.org"
-        con = requests.get(base_mirror)
+        base_mirror = "https://mirror.ctan.org"
+        con = retry_get(base_mirror)
         return con.url + "systems/texlive/tlnet/"
 
     # maybe let's try texlive.info
@@ -40,7 +40,7 @@ def find_mirror(texlive_info: bool = False) -> str:
         timenow.tm_mon,
         timenow.tm_mday,
     )
-    con = requests.get(url)
+    con = retry_get(url)
     if con.status_code == 404:
         return "https://texlive.info/tlnet-archive/%d/%02d/%02d/tlnet/" % (
             timenow.tm_year,
@@ -72,3 +72,19 @@ def download_and_retry(url: str, local_filename: Path):
     else:
         raise requests.HTTPError("%s can't be downloaded" % url)
     return True
+
+
+def retry_get(url: str) -> requests.Response:
+    for i in range(10):
+        logger.info("Getting %s.", url)
+        logger.info("Try: %s", i)
+        try:
+            con = requests.get(url)
+            break
+        except (requests.HTTPError, requests.ConnectionError) as e:
+            time.sleep(RETRY_INTERVAL)
+            logger.debug(e)
+
+    else:
+        raise requests.HTTPError("%s can't be downloaded" % url)
+    return con
