@@ -20,7 +20,13 @@ from pathlib import Path
 import requests
 
 from .constants import perl_to_py_dict_regex
-from .file_creator import create_fmts, create_maps
+from .file_creator import (
+    create_fmts,
+    create_language_dat,
+    create_language_def,
+    create_language_lua,
+    create_maps,
+)
 from .github_handler import upload_asset
 from .logger import logger
 from .requests_handler import download_and_retry, find_mirror
@@ -262,5 +268,20 @@ def main_laucher(scheme: str, directory: Path, package: str):
     create_maps(needed_pkgs, maps_file)
     logger.info("Uploading %s", maps_file)
     upload_asset(maps_file)
+
+    language_def_file = directory / (package + ".def")
+    create_language_def(needed_pkgs, language_def_file)
+    logger.info("Uploading %s", language_def_file)
+    upload_asset(language_def_file)
+
+    language_dat_file = directory / (package + ".dat")
+    create_language_dat(needed_pkgs, language_dat_file)
+    logger.info("Uploading %s", language_dat_file)
+    upload_asset(language_dat_file)
+
+    language_lua_file = directory / (package + ".dat.lua")
+    create_language_lua(needed_pkgs, language_lua_file)
+    logger.info("Uploading %s", language_lua_file)
+    upload_asset(language_lua_file)
 
     cleanup()

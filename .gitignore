@@ -134,3 +134,4 @@ dmypy.json
 *.tlpdb
 *.dat
 *.def
+*.dat.lua
