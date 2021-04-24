@@ -59,9 +59,9 @@ def download(url: str, local_filename: Path):
 
 
 def download_and_retry(url: str, local_filename: Path):
+    logger.info("Downloading %s to %s", url, local_filename)
     for i in range(10):
-        logger.info("Downloading %s.", url)
-        logger.info("Try: %s", i)
+        logger.info("Try: %s/10", i + 1)
         try:
             download(url, local_filename)
             break
@@ -75,9 +75,9 @@ def download_and_retry(url: str, local_filename: Path):
 
 
 def retry_get(url: str) -> requests.Response:
+    logger.info("Getting %s.", url)
     for i in range(10):
-        logger.info("Getting %s.", url)
-        logger.info("Try: %s", i)
+        logger.info("Try: %s/10", i + 1)
         try:
             con = requests.get(url)
             break
