@@ -131,7 +131,7 @@ def create_language_def(
     """
     logger.info("Creating %s file", filename_save)
     key_value_search_regex = re.compile(r"(?P<key>\S*)=(?P<value>[\S]+)")
-    final_file = "% test" # this is to avoid empty files.
+    final_file = "% test"  # this is to avoid empty files.
 
     def parse_string(temp: str) -> typing.Dict[str, str]:
         t_dict: typing.Dict[str, str] = {}
@@ -215,7 +215,7 @@ def create_language_dat(
     """
     logger.info("Creating %s file", filename_save)
     key_value_search_regex = re.compile(r"(?P<key>\S*)=(?P<value>[\S]+)")
-    final_file = "% test" # this is to avoid empty files.
+    final_file = "% test"  # this is to avoid empty files.
 
     def parse_string(temp: str) -> typing.Dict[str, str]:
         t_dict: typing.Dict[str, str] = {}
@@ -296,7 +296,7 @@ def create_language_lua(
     quotes_search_regex = re.compile(
         r"((?<![\\])['\"])(?P<luaspecial>(?:.(?!(?<![\\])\1))*.?)\1"
     )
-    final_file = "-- test" # this is to avoid empty files.
+    final_file = "-- test"  # this is to avoid empty files.
 
     def parse_string(temp: str) -> typing.Dict[str, str]:
         t_dict: typing.Dict[str, str] = {}
