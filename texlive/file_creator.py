@@ -305,7 +305,7 @@ def create_language_lua(
                 t_dict[mat.group("key")] = mat.group("value")
         quotes_search = quotes_search_regex.search(temp)
         if quotes_search:
-            t_dict["options"] = quotes_search.group("options")
+            t_dict["luaspecial"] = quotes_search.group("luaspecial")
         for i in [
             "name",
             "file",
@@ -332,20 +332,38 @@ def create_language_lua(
                         parsed_dict[
                             "synonyms"
                         ] = f"""'{"', '".join(parsed_dict['synonyms'].split(','))}'"""
-                    final_file += Template(
-                        dedent(
-                            """\
-                        ['$name'] = {
-                            loader = '$file',
-                            lefthyphenmin = $lefthyphenmin,
-                            righthyphenmin = $righthyphenmin,
-                            synonyms = { $synonyms },
-                            patterns = '$file_patterns',
-                            hyphenation = '$file_exceptions',
-                        },
-                        """
-                        ),
-                    ).substitute(**parsed_dict)
+                    if not parsed_dict["luaspecial"]:
+                        final_file += Template(
+                            dedent(
+                                """\
+                            ['$name'] = {
+                                loader = '$file',
+                                lefthyphenmin = $lefthyphenmin,
+                                righthyphenmin = $righthyphenmin,
+                                synonyms = { $synonyms },
+                                patterns = '$file_patterns',
+                                hyphenation = '$file_exceptions',
+                            },
+                            """
+                            ),
+                        ).substitute(**parsed_dict)
+                    else:
+                        print(parsed_dict["luaspecial"])
+                        final_file += Template(
+                            dedent(
+                                """\
+                            ['$name'] = {
+                                loader = '$file',
+                                lefthyphenmin = $lefthyphenmin,
+                                righthyphenmin = $righthyphenmin,
+                                synonyms = { $synonyms },
+                                patterns = '$file_patterns',
+                                hyphenation = '$file_exceptions',
+                                special = '$luaspecial',
+                            },
+                            """
+                            ),
+                        ).substitute(**parsed_dict)
             else:
                 has_hypen = [True for each in temp if "AddHyphen" in each]
                 if has_hypen:
@@ -359,20 +377,38 @@ def create_language_lua(
                                 f"""{"', '".join(parsed_dict['synonyms'].split(','))}"""
                                 "'"
                             )
-                        final_file += Template(
-                            dedent(
-                                """\
-                        ['$name'] = {
-                            loader = '$file',
-                            lefthyphenmin = $lefthyphenmin,
-                            righthyphenmin = $righthyphenmin,
-                            synonyms = { $synonyms },
-                            patterns = '$file_patterns',
-                            hyphenation = '$file_exceptions',
-                        },
-                        """
-                            ),
-                        ).substitute(**parsed_dict)
+                        if not parsed_dict["luaspecial"]:
+                            final_file += Template(
+                                dedent(
+                                    """\
+                                ['$name'] = {
+                                    loader = '$file',
+                                    lefthyphenmin = $lefthyphenmin,
+                                    righthyphenmin = $righthyphenmin,
+                                    synonyms = { $synonyms },
+                                    patterns = '$file_patterns',
+                                    hyphenation = '$file_exceptions',
+                                },
+                                """
+                                ),
+                            ).substitute(**parsed_dict)
+                        else:
+                            print(parsed_dict["luaspecial"])
+                            final_file += Template(
+                                dedent(
+                                    """\
+                                ['$name'] = {
+                                    loader = '$file',
+                                    lefthyphenmin = $lefthyphenmin,
+                                    righthyphenmin = $righthyphenmin,
+                                    synonyms = { $synonyms },
+                                    patterns = '$file_patterns',
+                                    hyphenation = '$file_exceptions',
+                                    special = '$luaspecial',
+                                },
+                                """
+                                ),
+                            ).substitute(**parsed_dict)
     with filename_save.open("w", encoding="utf-8") as f:
         f.write(final_file)
         logger.info("Wrote %s", filename_save)

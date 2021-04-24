@@ -20,7 +20,13 @@ from pathlib import Path
 import requests
 
 from .constants import perl_to_py_dict_regex
-from .file_creator import create_fmts, create_maps, create_language_def, create_language_dat, create_language_lua
+from .file_creator import (
+    create_fmts,
+    create_language_dat,
+    create_language_def,
+    create_language_lua,
+    create_maps,
+)
 from .github_handler import upload_asset
 from .logger import logger
 from .requests_handler import download_and_retry, find_mirror
