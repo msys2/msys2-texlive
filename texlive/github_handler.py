@@ -3,12 +3,14 @@ import sys
 from os import environ
 from pathlib import Path
 from typing import Any, AnyStr, Dict, List, Union
-from .logger import logger
+
 from github import Github
 from github.GithubException import GithubException, RateLimitExceededException
 from github.GitRelease import GitRelease
 from github.GitReleaseAsset import GitReleaseAsset
 from github.Repository import Repository
+
+from .logger import logger
 
 REPO = os.getenv("REPO", "msys2/msys2-texlive")
 
@@ -37,7 +39,7 @@ def get_credentials(use_pat: bool = False) -> Dict[str, Any]:
 
 def get_github(use_pat: bool = False) -> Github:
     kwargs = get_credentials(use_pat)
-    kwargs['per_page'] = 100
+    kwargs["per_page"] = 100
     gh = Github(**kwargs)
     return gh
 

@@ -34,9 +34,9 @@ from .utils import (
     cleanup,
     create_tar_archive,
     get_file_archive_name,
+    get_file_name_for_extra_files,
     get_url_for_package,
     write_contents_file,
-    get_file_name_for_extra_files
 )
 from .verify_files import check_sha512_sums, validate_gpg
 
@@ -271,7 +271,7 @@ def main_laucher(
         tmpdir = Path(tmdir)
 
         # first copy texlive.tlpdb
-        shutil.copy(Path('texlive.tlpdb'), tmpdir)
+        shutil.copy(Path("texlive.tlpdb"), tmpdir)
 
         # create other required files.
         fmts_file = directory / (package + ".fmts")
@@ -298,13 +298,13 @@ def main_laucher(
         create_language_lua(needed_pkgs, language_lua_file)
         logger.info("Created %s", language_lua_file)
         shutil.copy(language_lua_file, tmpdir)
-        
-        final_destination = directory / get_file_name_for_extra_files()
+
+        final_destination = directory / get_file_name_for_extra_files(package)
         # now create a tar archive
-        logger.info("Creating %s",final_destination)
+        logger.info("Creating %s", final_destination)
         create_tar_archive(tmpdir, final_destination)
 
-        logger.info("Uploading %s",final_destination)
+        logger.info("Uploading %s", final_destination)
         upload_asset(final_destination)
 
     cleanup()
