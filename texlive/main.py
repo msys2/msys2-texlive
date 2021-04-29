@@ -1,7 +1,7 @@
 """
 
-    download_archives.py
-    ~~~~~~~~~~~~~~~~~~~~
+    main.py
+    ~~~~~~~
 
     A utility to download required archives for texlive-packages
     by parsing `texlive.tlpdb` and creating `.fmts` and `.maps`
@@ -36,6 +36,7 @@ from .utils import (
     get_file_archive_name,
     get_url_for_package,
     write_contents_file,
+    get_file_name_for_extra_files
 )
 from .verify_files import check_sha512_sums, validate_gpg
 
@@ -229,7 +230,7 @@ def main_laucher(
     ----------
     scheme : str
         The scheme or collection to search for. It can be
-        anything which it available in ``texlive.tlpsrc``.
+        anything which it available in ``texlive.tlpdb``.
     directory : Path
         The directory to save files downloaded.
     package : str
@@ -249,7 +250,7 @@ def main_laucher(
         # see constant for a mapping
         download_all_packages(scheme, mirror, archive_name, needed_pkgs)
         logger.info("Uploading %s", archive_name)
-        upload_asset(archive_name)  # uploads archive
+        upload_asset(archive_name)  # uploads the main archive
     except requests.HTTPError as e:
         logger.error("Failed with: %s", e)
         logger.warning("Retrying with texlive.info")
@@ -265,30 +266,45 @@ def main_laucher(
         # arch uses "scheme-medium" for texlive-core
         download_all_packages(scheme, mirror, archive_name, needed_pkgs)
         logger.info("Uploading %s", archive_name)
-        upload_asset(archive_name)  # uploads archive
-    fmts_file = directory / (package + ".fmts")
-    create_fmts(needed_pkgs, fmts_file)
-    logger.info("Uploading %s", fmts_file)
-    upload_asset(fmts_file)
+        upload_asset(archive_name)  # uploads the main archive
+    with tempfile.TemporaryDirectory() as tmdir:
+        tmpdir = Path(tmdir)
 
-    maps_file = directory / (package + ".maps")
-    create_maps(needed_pkgs, maps_file)
-    logger.info("Uploading %s", maps_file)
-    upload_asset(maps_file)
+        # first copy texlive.tlpdb
+        shutil.copy(Path('texlive.tlpdb'), tmpdir)
 
-    language_def_file = directory / (package + ".def")
-    create_language_def(needed_pkgs, language_def_file)
-    logger.info("Uploading %s", language_def_file)
-    upload_asset(language_def_file)
+        # create other required files.
+        fmts_file = directory / (package + ".fmts")
+        create_fmts(needed_pkgs, fmts_file)
+        logger.info("Created %s", fmts_file)
+        shutil.copy(fmts_file, tmpdir)
 
-    language_dat_file = directory / (package + ".dat")
-    create_language_dat(needed_pkgs, language_dat_file)
-    logger.info("Uploading %s", language_dat_file)
-    upload_asset(language_dat_file)
+        maps_file = directory / (package + ".maps")
+        create_maps(needed_pkgs, maps_file)
+        logger.info("Created %s", maps_file)
+        shutil.copy(maps_file, tmpdir)
 
-    language_lua_file = directory / (package + ".dat.lua")
-    create_language_lua(needed_pkgs, language_lua_file)
-    logger.info("Uploading %s", language_lua_file)
-    upload_asset(language_lua_file)
+        language_def_file = directory / (package + ".def")
+        create_language_def(needed_pkgs, language_def_file)
+        logger.info("Created %s", language_def_file)
+        shutil.copy(language_def_file, tmpdir)
+
+        language_dat_file = directory / (package + ".dat")
+        create_language_dat(needed_pkgs, language_dat_file)
+        logger.info("Created %s", language_dat_file)
+        shutil.copy(language_dat_file, tmpdir)
+
+        language_lua_file = directory / (package + ".dat.lua")
+        create_language_lua(needed_pkgs, language_lua_file)
+        logger.info("Created %s", language_lua_file)
+        shutil.copy(language_lua_file, tmpdir)
+        
+        final_destination = directory / get_file_name_for_extra_files()
+        # now create a tar archive
+        logger.info("Creating %s",final_destination)
+        create_tar_archive(tmpdir, final_destination)
+
+        logger.info("Uploading %s",final_destination)
+        upload_asset(final_destination)
 
     cleanup()

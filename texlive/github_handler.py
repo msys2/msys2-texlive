@@ -37,6 +37,7 @@ def get_credentials(use_pat: bool = False) -> Dict[str, Any]:
 
 def get_github(use_pat: bool = False) -> Github:
     kwargs = get_credentials(use_pat)
+    kwargs['per_page'] = 100
     gh = Github(**kwargs)
     return gh
 

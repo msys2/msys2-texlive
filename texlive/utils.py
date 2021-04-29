@@ -14,6 +14,9 @@ def get_file_archive_name(package: str) -> str:
     version = time.strftime("%Y%m%d")
     return f"{package}-{version}.tar.xz"
 
+def get_file_name_for_extra_files(package: str) -> str:
+    return f"{package}-extra-files.tar.xz"
+
 
 def get_url_for_package(pkgname: str, mirror_url: str):
     if mirror_url[-1] == "/":
