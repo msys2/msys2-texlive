@@ -17,20 +17,39 @@ jobs:
         package:
           [
             "texlive-core",
-            "texlive-bibtexextra",
-            "texlive-fontsextra",
-            "texlive-formatsextra",
+            "texlive-bibtex-extra",
+            "texlive-extra-utils",
+            "texlive-fonts-extra",
+            "texlive-fonts-recommended",
+            "texlive-font-utils",
+            "texlive-formats-extra",
             "texlive-games",
             "texlive-humanities",
-            "texlive-langchinese",
-            "texlive-langcyrillic",
-            #"texlive-langextra",
-            "texlive-langgreek",
-            "texlive-langjapanese",
-            "texlive-langkorean",
-            "texlive-latexextra",
+            "texlive-lang-arabic",
+            "texlive-lang-chinese",
+            "texlive-lang-cjk",
+            "texlive-lang-cyrillic",
+            "texlive-lang-czechslovak",
+            "texlive-lang-english",
+            "texlive-lang-european",
+            "texlive-lang-french",
+            "texlive-lang-german",
+            "texlive-lang-greek",
+            "texlive-lang-italian",
+            "texlive-lang-japanese",
+            "texlive-lang-korean",
+            "texlive-lang-other",
+            "texlive-lang-polish",
+            "texlive-lang-portuguese",
+            "texlive-lang-spanish",
+            "texlive-latex-base",
+            "texlive-latex-extra",
+            "texlive-latex-recommended",
+            "texlive-luatex",
+            "texlive-metapost",
             "texlive-music",
             "texlive-pictures",
+            "texlive-plain-generic",
             "texlive-pstricks",
             "texlive-publishers",
             "texlive-science",
@@ -73,11 +92,11 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: "3.8"
-      
+
       - name: Install dependencies
         run: |
           python -m pip install -r requirements.txt
-      
+
       - name: Update Release Body
         env:
           version: ${{ steps.version.outputs.version }}
