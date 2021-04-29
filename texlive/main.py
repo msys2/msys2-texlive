@@ -122,9 +122,13 @@ def get_all_packages() -> typing.Dict[str, typing.Dict[str, typing.Union[list, s
 def get_dependencies(
     name: str,
     pkglist: typing.Dict[str, typing.Dict[str, typing.Union[list, str]]],
-    collection_list: typing.List[str] = [],
-    final_deps: typing.List[str] = [],
+    collection_list: typing.List[str] = None,
+    final_deps: typing.List[str] = None,
 ) -> typing.List[str]:
+    if final_deps is None:
+        final_deps = []
+    if collection_list is None:
+        collection_list = []
     if ".ARCH" in name:
         return []
     pkg: typing.Dict[str, typing.Union[list, str]] = pkglist[name]
@@ -134,12 +138,13 @@ def get_dependencies(
     if isinstance(dep_name, str):
         if ".ARCH" in dep_name:
             return []
-        if dep_name not in final_deps:
-            final_deps.append(dep_name)
-            get_dependencies(dep_name, pkglist, collection_list, final_deps)
         if "collection" in dep_name or "scheme" in dep_name:
             collection_list.append(dep_name)
-            get_dependencies(dep_name, pkglist, collection_list, final_deps)
+            return []
+        else:
+            if dep_name not in final_deps:
+                final_deps.append(dep_name)
+                get_dependencies(dep_name, pkglist, collection_list, final_deps)
     else:
         for i in pkg["depend"]:
             dep_name = i
@@ -147,9 +152,8 @@ def get_dependencies(
                 continue
             if "collection" in dep_name or "scheme" in dep_name:
                 if dep_name not in collection_list:
-                    final_deps.append(dep_name)
                     collection_list.append(dep_name)
-                    get_dependencies(dep_name, pkglist, collection_list, final_deps)
+                    continue
             else:
                 if dep_name not in final_deps:
                     final_deps.append(dep_name)
