@@ -30,7 +30,7 @@ for asset in release_assets:
     checksums[asset.name] = find_checksum_from_url(url, "sha256")
 
 checksums_string = "\n".join(
-    [f"{checksum}  {name}" for name, checksum in zip(checksums)]
+    [f"{checksum}  {name}" for name, checksum in checksums.items()]
 )
 
 release.update_release(
