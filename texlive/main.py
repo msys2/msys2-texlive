@@ -157,11 +157,16 @@ def get_dependencies(
 
 
 def get_needed_packages_with_info(
-    scheme: str,
+    collection: typing.Union[str, typing.Sequence[str]],
 ) -> typing.Dict[str, typing.Union[typing.Dict[str, typing.Union[str, list]]]]:
-    logger.info("Resolving scheme %s", scheme)
+    logger.info("Resolving Packages %s", collection)
     pkg_list = get_all_packages()
-    deps = get_dependencies(scheme, pkg_list)
+    deps: typing.List[str] = []
+    if isinstance(collection, str):
+        deps = get_dependencies(collection, pkg_list)
+    else:
+        for dep in collection:
+            deps.extend(get_dependencies(dep, pkg_list))
     deps.sort()
     deps_info = {}
     for i in deps:
@@ -170,7 +175,7 @@ def get_needed_packages_with_info(
 
 
 def download_all_packages(
-    scheme: str,
+    scheme: typing.Union[str, typing.Sequence[str]],
     mirror_url: str,
     final_tar_location: Path,
     needed_pkgs: typing.Dict[
@@ -212,7 +217,9 @@ def download_all_packages(
         create_tar_archive(path=tmpdir, output_filename=final_tar_location)
 
 
-def main_laucher(scheme: str, directory: Path, package: str):
+def main_laucher(
+    scheme: typing.Union[str, typing.Sequence[str]], directory: Path, package: str
+):
     """This is the main entrypoint
 
     This program will parse and download archives from
@@ -239,7 +246,7 @@ def main_laucher(scheme: str, directory: Path, package: str):
 
         logger.info("Number of needed Packages: %s", len(needed_pkgs))
 
-        # arch uses "scheme-medium" for texlive-core
+        # see constant for a mapping
         download_all_packages(scheme, mirror, archive_name, needed_pkgs)
         logger.info("Uploading %s", archive_name)
         upload_asset(archive_name)  # uploads archive
