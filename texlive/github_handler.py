@@ -3,9 +3,9 @@ import sys
 from os import environ
 from pathlib import Path
 from typing import Any, AnyStr, Dict, List, Union
-
+from .logger import logger
 from github import Github
-from github.GithubException import GithubException
+from github.GithubException import GithubException, RateLimitExceededException
 from github.GitRelease import GitRelease
 from github.GitReleaseAsset import GitReleaseAsset
 from github.Repository import Repository
@@ -15,28 +15,34 @@ REPO = os.getenv("REPO", "msys2/msys2-texlive")
 _PathLike = Union[os.PathLike, AnyStr]
 
 
-def get_credentials() -> Dict[str, Any]:
-    if "GITHUB_TOKEN" in environ:
-        return {"login_or_token": environ["GITHUB_TOKEN"]}
-    elif "GITHUB_USER" in environ and "GITHUB_PASS" in environ:
-        return {
-            "login_or_token": environ["GITHUB_USER"],
-            "password": environ["GITHUB_PASS"],
-        }
+def get_credentials(use_pat: bool = False) -> Dict[str, Any]:
+    if not use_pat:
+        if "GITHUB_TOKEN" in environ:
+            return {"login_or_token": environ["GITHUB_TOKEN"]}
+        elif "GITHUB_USER" in environ and "GITHUB_PASS" in environ:
+            return {
+                "login_or_token": environ["GITHUB_USER"],
+                "password": environ["GITHUB_PASS"],
+            }
+        else:
+            raise Exception(
+                "'GITHUB_TOKEN' or 'GITHUB_USER'/'GITHUB_PASS' env vars not set"
+            )
     else:
-        raise Exception(
-            "'GITHUB_TOKEN' or 'GITHUB_USER'/'GITHUB_PASS' env vars not set"
-        )
+        if "ALT_TOKEN" in environ:
+            return {"login_or_token": environ["ALT_TOKEN"]}
+        else:
+            raise Exception("'ALT_TOKEN' env vars not set")
 
 
-def get_github() -> Github:
-    kwargs = get_credentials()
+def get_github(use_pat: bool = False) -> Github:
+    kwargs = get_credentials(use_pat)
     gh = Github(**kwargs)
     return gh
 
 
-def get_repo() -> Repository:
-    gh = get_github()
+def get_repo(use_pat: bool = False) -> Repository:
+    gh = get_github(use_pat)
     return gh.get_repo(REPO, lazy=True)
 
 
@@ -71,8 +77,11 @@ def upload_asset(path: _PathLike) -> None:
                 break
         try:
             upload()
-        except GithubException:
-            # try again
+        except (GithubException, RateLimitExceededException) as e:
+            # try again with PAT
+            logger.error(e)
+            repo = get_repo(use_pat=True)
+            release = repo.get_release(environ["tag_act"].split("/")[-1])
             upload()
         print(f"Uploaded {asset_name} as {asset_label}")
     else:

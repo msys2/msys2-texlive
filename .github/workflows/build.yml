@@ -72,6 +72,7 @@ jobs:
           tag_act: ${{ github.ref }}
           GITHUB_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
+          ALT_TOKEN: ${{ secrets.ALT_TOKEN }}
         shell: pwsh
         run: |
           mkdir build
@@ -102,7 +103,7 @@ jobs:
           version: ${{ steps.version.outputs.version }}
           event: ${{ github.event_name }}
           tag_act: ${{ github.ref }}
-          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ secrets.ALT_TOKEN }}
           REPO: ${{ github.repository }}
         run: |
           python scripts/update_release_body.py
