@@ -25,6 +25,7 @@ from .file_creator import (
     create_language_dat,
     create_language_def,
     create_language_lua,
+    create_linked_scripts,
     create_maps,
 )
 from .github_handler import upload_asset
@@ -307,6 +308,11 @@ def main_laucher(
         create_language_lua(needed_pkgs, language_lua_file)
         logger.info("Created %s", language_lua_file)
         shutil.copy(language_lua_file, tmpdir)
+
+        linked_scripts_file = directory / (package + ".scripts")
+        create_linked_scripts(needed_pkgs, linked_scripts_file)
+        logger.info("Created %s", linked_scripts_file)
+        shutil.copy(linked_scripts_file, tmpdir)
 
         final_destination = directory / get_file_name_for_extra_files(package)
         # now create a tar archive

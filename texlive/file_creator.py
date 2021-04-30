@@ -5,6 +5,7 @@ from string import Template
 from textwrap import dedent
 
 from .logger import logger
+from .main import get_all_packages, split_texlive_tlpdb_into_para
 
 
 def create_fmts(
@@ -413,3 +414,45 @@ def create_language_lua(
         f.write(final_file)
         logger.info("Wrote %s", filename_save)
     return filename_save
+
+
+def create_linked_scripts(
+    pkg_infos: typing.Dict[
+        str, typing.Union[typing.Dict[str, typing.Union[str, list]]]
+    ],
+    filename_save: Path,
+):
+    """This create ``<package-name>.scripts`` from the given
+    :attr:`pkg_infos`. :attr:`pkg_infos` can be is from
+    :func:`get_needed_packages_with_info`.
+    ``<package-name>.scripts`` will contain the exectuable to be
+    created when packaging, which should be sourceable in a bash
+    shell.
+
+    Parameters
+    ----------
+    pkg_infos
+        The dict of packages from
+    filename_save
+        The name of the file to save.
+    """
+    logger.info("Creating %s file", filename_save)
+    final_file = "# This file contains linked scripts list for the package."
+    final_file += 'linked_scripts="'
+    texlive_tlpdb_split = split_texlive_tlpdb_into_para()
+    all_packages = get_all_packages()
+    find_script_regex = re.compile(
+        r"^( *)texmf-dist\/scripts\/(?P<script_name>[\/\w\.\-]*)", re.MULTILINE
+    )
+
+    for pkg in pkg_infos:
+        for n, all_pkg_iter in enumerate(all_packages):
+            if pkg == all_pkg_iter:
+                temp_str = texlive_tlpdb_split[n]
+                for script in find_script_regex.finditer(temp_str):
+                    final_file += script.group("script_name") + "\n"
+                break
+    final_file += '"'
+    with filename_save.open("w", encoding="utf-8") as f:
+        f.write(final_file)
+        logger.info("Wrote %s", filename_save)
