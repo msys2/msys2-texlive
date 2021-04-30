@@ -144,7 +144,6 @@ def get_dependencies(
         else:
             if dep_name not in final_deps:
                 final_deps.append(dep_name)
-                get_dependencies(dep_name, pkglist, collection_list, final_deps)
     else:
         for i in pkg["depend"]:
             dep_name = i
@@ -157,7 +156,6 @@ def get_dependencies(
             else:
                 if dep_name not in final_deps:
                     final_deps.append(dep_name)
-                    get_dependencies(dep_name, pkglist, collection_list, final_deps)
     return final_deps
 
 
