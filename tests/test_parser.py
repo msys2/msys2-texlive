@@ -1,7 +1,8 @@
 from texlive.main import *
+import texlive.main
 import pytest
 from hypothesis import given
-from hypothesis.strategies import from_regex
+from hypothesis.strategies import from_regex, integers
 from textwrap import dedent
 
 
@@ -74,3 +75,51 @@ def test_parse_tlpdb_single_line(param):
 )
 def test_parse_tlpdb_multiple(param, expected):
     assert parse_tlpdb(param) == expected
+
+
+def test_dependency(monkeypatch):
+    def mock_split_texlive_tlpdb():
+        return (
+            [
+                dedent(
+                    """\
+            name garrigues
+            category Package
+            revision 15878
+            shortdesc MetaPost macros for the reproduction of Garrigues' Easter nomogram
+            relocated 1
+            longdesc MetaPost macros for the reproduction of Garrigues' Easter
+            longdesc nomogram. These macros are described in Denis Roegel: An
+            longdesc introduction to nomography: Garrigues' nomogram for the
+            longdesc computation of Easter, TUGboat (volume 30, number 1, 2009,
+            longdesc pages 88-104)
+            containersize 8268
+            containerchecksum e1440fcf8eb0ccd3b140649c590c902882a8a5a02d4cc14589ed44193f3a70bf13839e9de9663c500bb6874d6fce34f5a21c07e38a7456738548b6ebf449b258
+            doccontainersize 532
+            doccontainerchecksum 0c91f7e1c8fe4910fa7052440edd9afd81c8932e99368219c8a5037bddfa4c8c11037576e9c94721062df9cf7fd5d467389ddcf3aed3e1853be38846c049100f
+            docfiles size=2
+            RELOC/doc/metapost/garrigues/README details="Readme"
+            RELOC/doc/metapost/garrigues/article.txt
+            runfiles size=9
+            RELOC/metapost/garrigues/garrigues.mp
+            catalogue-ctan /graphics/metapost/contrib/macros/garrigues
+            catalogue-license lppl
+            catalogue-topics calculation
+            """
+                )
+            ]
+            * 100
+        )
+
+    monkeypatch.setattr(
+        texlive.main, "split_texlive_tlpdb_into_para", mock_split_texlive_tlpdb
+    )
+    all_pkg = get_all_packages()
+    assert len(all_pkg) == 1
+    assert 'garrigues' in all_pkg
+    test = all_pkg['garrigues']
+    assert test['category'] == 'Package'
+    assert len(test['longdesc']) == 5
+
+def test_split_texlive_tlpdb_into_para(setup_texlive_tlpdb):
+    assert len(split_texlive_tlpdb_into_para()) > 7000
