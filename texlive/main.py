@@ -45,7 +45,7 @@ from .verify_files import check_sha512_sums, validate_gpg
 
 def download_texlive_tlpdb(mirror: str) -> str:
     """This function download
-    ``texlive.tlpdf`` from the :attr:mirror passed.
+    ``texlive.tlpdb`` from the :attr:mirror passed.
     This is later used in parsing and while downloading.
 
     Parameters
@@ -87,9 +87,9 @@ def download_texlive_tlpdb(mirror: str) -> str:
     return mirror
 
 
-def parse_perl(perl_code) -> typing.Dict[str, typing.Union[list, str]]:
+def parse_tlpdb(tlpdb) -> typing.Dict[str, typing.Union[list, str]]:
     final_dict: typing.Dict[str, typing.Union[list, str]] = {}
-    for findings in perl_to_py_dict_regex.finditer(perl_code):
+    for findings in perl_to_py_dict_regex.finditer(tlpdb):
         key = findings.group("key")
         value = findings.group("value")
         if key:
@@ -124,7 +124,7 @@ def get_all_packages() -> typing.Dict[str, typing.Dict[str, typing.Union[list, s
         str, typing.Dict[str, typing.Union[list, str]]
     ] = OrderedDict()
     for tmp in split_texlive_tlpdb_into_para():
-        tmp_dict = parse_perl(tmp)
+        tmp_dict = parse_tlpdb(tmp)
         name = str(tmp_dict["name"])
         package_list[name] = tmp_dict
     return package_list
