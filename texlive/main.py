@@ -313,7 +313,12 @@ def main_laucher(
         shutil.copy(language_lua_file, tmpdir)
 
         linked_scripts_file = directory / (package + ".scripts")
-        create_linked_scripts(needed_pkgs, linked_scripts_file)
+        create_linked_scripts(
+            needed_pkgs,
+            linked_scripts_file,
+            get_all_packages(),
+            split_texlive_tlpdb_into_para(),
+        )
         logger.info("Created %s", linked_scripts_file)
         shutil.copy(linked_scripts_file, tmpdir)
 

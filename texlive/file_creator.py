@@ -5,7 +5,6 @@ from string import Template
 from textwrap import dedent
 
 from .logger import logger
-from .main import get_all_packages, split_texlive_tlpdb_into_para
 
 
 def create_fmts(
@@ -421,6 +420,8 @@ def create_linked_scripts(
         str, typing.Union[typing.Dict[str, typing.Union[str, list]]]
     ],
     filename_save: Path,
+    all_packages: typing.Dict[str, typing.Dict[str, typing.Union[list, str]]],
+    texlive_tlpdb_split: typing.List[str]
 ):
     """This create ``<package-name>.scripts`` from the given
     :attr:`pkg_infos`. :attr:`pkg_infos` can be is from
@@ -435,12 +436,15 @@ def create_linked_scripts(
         The dict of packages from
     filename_save
         The name of the file to save.
+    all_packages
+        A list of all package from :func:`get_all_packages`
+    texlive_tlpdb_split
+        A list of contents in ``texlive.tlpdb``
+        from :func:`split_texlive_tlpdb_into_para`.
     """
     logger.info("Creating %s file", filename_save)
     final_file = "# This file contains linked scripts list for the package."
     final_file += 'linked_scripts="'
-    texlive_tlpdb_split = split_texlive_tlpdb_into_para()
-    all_packages = get_all_packages()
     find_script_regex = re.compile(
         r"^( *)texmf-dist\/scripts\/(?P<script_name>[\/\w\.\-]*)", re.MULTILINE
     )
