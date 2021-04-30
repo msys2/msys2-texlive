@@ -6,7 +6,7 @@ import requests
 from .constants import RETRY_INTERVAL
 from .logger import logger
 
-__all__ = ["find_mirror", "download", "download_and_retry"]
+__all__ = ["find_mirror", "download", "download_and_retry", "retry_get"]
 
 
 def find_mirror(texlive_info: bool = False) -> str:
@@ -84,7 +84,6 @@ def retry_get(url: str) -> requests.Response:
         except (requests.HTTPError, requests.ConnectionError) as e:
             time.sleep(RETRY_INTERVAL)
             logger.debug(e)
-
     else:
         raise requests.HTTPError("%s can't be downloaded" % url)
     return con
