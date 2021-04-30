@@ -15,6 +15,7 @@ import concurrent.futures
 import shutil
 import tempfile
 import typing
+from collections import OrderedDict
 from pathlib import Path
 
 import requests
@@ -119,7 +120,9 @@ def split_texlive_tlpdb_into_para() -> typing.List[str]:
 
 
 def get_all_packages() -> typing.Dict[str, typing.Dict[str, typing.Union[list, str]]]:
-    package_list: typing.Dict[str, typing.Dict[str, typing.Union[list, str]]] = {}
+    package_list: OrderedDict[
+        str, typing.Dict[str, typing.Union[list, str]]
+    ] = OrderedDict()
     for tmp in split_texlive_tlpdb_into_para():
         tmp_dict = parse_perl(tmp)
         name = str(tmp_dict["name"])
