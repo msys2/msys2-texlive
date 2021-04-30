@@ -1,9 +1,11 @@
-from texlive.main import *
-import texlive.main
+from textwrap import dedent
+
 import pytest
 from hypothesis import given
 from hypothesis.strategies import from_regex, integers
-from textwrap import dedent
+
+import texlive.main
+from texlive.main import *
 
 
 @given(from_regex(perl_to_py_dict_regex, fullmatch=True))
@@ -116,10 +118,11 @@ def test_dependency(monkeypatch):
     )
     all_pkg = get_all_packages()
     assert len(all_pkg) == 1
-    assert 'garrigues' in all_pkg
-    test = all_pkg['garrigues']
-    assert test['category'] == 'Package'
-    assert len(test['longdesc']) == 5
+    assert "garrigues" in all_pkg
+    test = all_pkg["garrigues"]
+    assert test["category"] == "Package"
+    assert len(test["longdesc"]) == 5
+
 
 def test_split_texlive_tlpdb_into_para(setup_texlive_tlpdb):
     assert len(split_texlive_tlpdb_into_para()) > 7000
