@@ -103,19 +103,26 @@ def parse_perl(perl_code) -> typing.Dict[str, typing.Union[list, str]]:
     return final_dict
 
 
-def get_all_packages() -> typing.Dict[str, typing.Dict[str, typing.Union[list, str]]]:
+def split_texlive_tlpdb_into_para() -> typing.List[str]:
     with open("texlive.tlpdb", "r", encoding="utf-8") as f:
         lines = f.readlines()
     logger.info("Parsing texlive.tlpdb")
-    package_list: typing.Dict[str, typing.Dict[str, typing.Union[list, str]]] = {}
+    package_list: typing.List[str] = []
     last_line: int = 0
     for n, line in enumerate(lines):
         if line == "\n":
             tmp = "".join(lines[last_line : n + 1]).strip()
-            tmp_dict = parse_perl(tmp)
-            name = str(tmp_dict["name"])
-            package_list[name] = tmp_dict
+            package_list.append(tmp)
             last_line = n
+    return package_list
+
+
+def get_all_packages() -> typing.Dict[str, typing.Dict[str, typing.Union[list, str]]]:
+    package_list: typing.Dict[str, typing.Dict[str, typing.Union[list, str]]] = {}
+    for tmp in split_texlive_tlpdb_into_para():
+        tmp_dict = parse_perl(tmp)
+        name = str(tmp_dict["name"])
+        package_list[name] = tmp_dict
     return package_list
 
 
