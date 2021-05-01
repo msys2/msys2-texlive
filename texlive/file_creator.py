@@ -421,7 +421,7 @@ def create_linked_scripts(
     ],
     filename_save: Path,
     all_packages: typing.Dict[str, typing.Dict[str, typing.Union[list, str]]],
-    texlive_tlpdb_split: typing.List[str]
+    texlive_tlpdb_split: typing.List[str],
 ):
     """This create ``<package-name>.scripts`` from the given
     :attr:`pkg_infos`. :attr:`pkg_infos` can be is from
@@ -446,7 +446,8 @@ def create_linked_scripts(
     final_file = "# This file contains linked scripts list for the package.\n"
     final_file += 'linked_scripts="'
     find_script_regex = re.compile(
-        r"^( *)texmf-dist\/scripts\/(?P<script_name>[\/\w\.\-]*)", re.MULTILINE
+        r"^( *)texmf-dist\/scripts\/(?P<script_name>[\/\w\-]*)\.(?P<script_ext>[\/\w\-]*)",
+        re.MULTILINE,
     )
 
     for pkg in pkg_infos:
@@ -454,7 +455,22 @@ def create_linked_scripts(
             if pkg == all_pkg_iter:
                 temp_str = texlive_tlpdb_split[n]
                 for script in find_script_regex.finditer(temp_str):
-                    final_file += script.group("script_name") + "\n"
+                    if script.group("script_ext") in [
+                        "tlu",
+                        "texlua",
+                        "lua",
+                        "pl",
+                        "rb",
+                        "py",
+                        "tcl",
+                        "jar",
+                        "vbs",
+                        "js",
+                        "bat",
+                        "cmd",
+                        "sh",
+                    ]:
+                        final_file += script.group("script_name") + "\n"
                 break
     final_file += '"'
     with filename_save.open("w", encoding="utf-8") as f:
