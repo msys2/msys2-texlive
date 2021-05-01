@@ -470,7 +470,12 @@ def create_linked_scripts(
                         "cmd",
                         "sh",
                     ]:
-                        final_file += script.group("script_name") + "\n"
+                        final_file += (
+                            script.group("script_name")
+                            + "."
+                            + script.group("script_ext")
+                            + "\n"
+                        )
                 break
     final_file += '"'
     with filename_save.open("w", encoding="utf-8") as f:
