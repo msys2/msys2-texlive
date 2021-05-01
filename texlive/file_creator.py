@@ -446,7 +446,7 @@ def create_linked_scripts(
     final_file = "# This file contains linked scripts list for the package.\n"
     final_file += 'linked_scripts="'
     find_script_regex = re.compile(
-        r"^( *)texmf-dist\/scripts\/(?P<script_name>[\/\w\-]*)\.(?P<script_ext>[\/\w\-]*)",
+        r"^( *)texmf-dist\/scripts\/(?P<script_name>[\/\w\-]*)\.(?P<script_ext>[\/\w\-]*)",  # noqa: E501
         re.MULTILINE,
     )
 
