@@ -443,7 +443,7 @@ def create_linked_scripts(
         from :func:`split_texlive_tlpdb_into_para`.
     """
     logger.info("Creating %s file", filename_save)
-    final_file = "# This file contains linked scripts list for the package."
+    final_file = "# This file contains linked scripts list for the package.\n"
     final_file += 'linked_scripts="'
     find_script_regex = re.compile(
         r"^( *)texmf-dist\/scripts\/(?P<script_name>[\/\w\.\-]*)", re.MULTILINE
