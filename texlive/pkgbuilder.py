@@ -90,11 +90,26 @@ def get_version() -> PackageVersion:
 def find_collection_dependencies(
     pkg_info: typing.Dict[str, typing.Union[str, list]]
 ) -> typing.List[str]:
+    def find_package_name_from_collection(col_name: str) -> str:
+        # I know this is dirty by no other better way :face_palm:
+        for pkg_name, collection in PACKAGE_COLLECTION.items():
+            if isinstance(collection, list):
+                if col_name in collection:
+                    return
+                continue
+            if collection == col_name:
+                return pkg_name
+        else:
+            raise Exception("No mapping.")
+
     if "depend" in pkg_info:
         deps = []
         for dep in pkg_info["depend"]:
             if dep.startswith("collection-"):
-                deps.append(dep)
+                p_dep = find_package_name_from_collection(dep)
+                if p_dep:
+                    print(p_dep, pkg_info["name"])
+                    deps.append(p_dep)
         return deps
     return []
 
@@ -168,8 +183,8 @@ def get_checksums(pkg: str) -> typing.List[str]:
 def main(repo_path: Path):
     jinja = JinjaHandler()
     version = get_version()
+    all_pkg = get_all_packages()
     for pkg in PACKAGE_COLLECTION:
-        all_pkg = get_all_packages()
         backup = []
         copy_extra_files = []
         extra_cleanup_scripts_sed = []
@@ -178,7 +193,7 @@ def main(repo_path: Path):
             package = Package(
                 name=pkg,
                 desc="TeX Live core distribution",
-                deps=get_groups(PACKAGE_COLLECTION[pkg], all_pkg),
+                deps=[],
                 groups=get_groups(PACKAGE_COLLECTION[pkg], all_pkg),
                 sha256sums=get_checksums(pkg),
                 backup=backup,
