@@ -18,7 +18,7 @@ depends=(
 groups=(
     "${MINGW_PACKAGE_PREFIX}-texlive-full"
     {% for item in package.groups %}
-    "${MINGW_PACKAGE_PREFIX}-{{item}}"
+    "${MINGW_PACKAGE_PREFIX}-texlive-{{item}}"
     {% endfor %}
 )
 url='http://tug.org/texlive/'

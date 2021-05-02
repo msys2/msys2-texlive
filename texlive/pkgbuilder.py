@@ -179,7 +179,7 @@ def main(repo_path: Path):
                 name=pkg,
                 desc="TeX Live core distribution",
                 deps=get_groups(PACKAGE_COLLECTION[pkg], all_pkg),
-                groups=[],
+                groups=get_groups(PACKAGE_COLLECTION[pkg], all_pkg),
                 sha256sums=get_checksums(pkg),
                 backup=backup,
                 copy_extra_files=copy_extra_files,
@@ -211,5 +211,7 @@ def main(repo_path: Path):
             template = jinja.get_template()
         template = template.render(package=package, version=version)
         pkgbuild_location = repo_path / f"mingw-w64-{pkg}" / "PKGBUILD"
+        if not pkgbuild_location.exists():
+            pkgbuild_location.parent.mkdir()
         with pkgbuild_location.open("w", encoding="utf-8") as f:
             f.write(template)
