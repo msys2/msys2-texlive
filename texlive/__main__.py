@@ -1,6 +1,7 @@
 import argparse
-from pathlib import Path
 import sys
+from pathlib import Path
+
 from .constants import PACKAGE_COLLECTION
 from .logger import logger
 from .main import main_laucher
