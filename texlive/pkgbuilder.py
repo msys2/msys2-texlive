@@ -80,20 +80,6 @@ class JinjaHandler:
             return self.environment.get_template("PKGBUILD-common.jinjatemplate")
 
 
-# print(
-#     template.render(
-#         package={
-#             "name": "texlive",
-#             "desc": "no",
-#             "deps": ["no", "no2"],
-#             "backup": ["oh no"],
-#             "copy_extra_files": [("oh", "pleae")],
-#         },
-#         version={"major": 2021, "minor": "2021"},
-#     )
-# )
-
-
 def get_version() -> PackageVersion:
     return PackageVersion(
         major=time.strftime("%Y"),
