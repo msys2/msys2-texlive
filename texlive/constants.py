@@ -1,8 +1,9 @@
 import re
+import typing
 
 perl_to_py_dict_regex = re.compile(r"(?P<key>\S*) (?P<value>[\s\S][^\n]*)")
 RETRY_INTERVAL = 10  # in seconds
-PACKAGE_COLLECTION = {
+PACKAGE_COLLECTION: typing.Dict[str, typing.Union[str, typing.List[str]]] = {
     "texlive-core": [
         "collection-basic",
         "collection-xetex",

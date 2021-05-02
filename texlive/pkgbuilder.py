@@ -4,6 +4,7 @@ import re
 import time
 import typing
 from dataclasses import dataclass
+from pathlib import Path
 
 from jinja2 import Environment, PackageLoader, select_autoescape
 from jinja2.environment import Template
@@ -11,7 +12,6 @@ from jinja2.environment import Template
 from .constants import PACKAGE_COLLECTION
 from .github_handler import Release
 from .main import get_all_packages
-from pathlib import Path
 
 release = Release()
 
@@ -42,7 +42,7 @@ class Package:
     groups: typing.List[str]
     sha256sums: typing.List[str]  # ! should contain only 2 elements
     backup: typing.List[str]
-    copy_extra_files: typing.List[typing.Tuple[str]]
+    copy_extra_files: typing.List[typing.Tuple[str, str]]
     extra_cleanup_scripts_sed: typing.List[str]
     extra_cleanup_scripts_final: typing.List[
         str
@@ -89,13 +89,13 @@ def get_version() -> PackageVersion:
 
 def find_collection_dependencies(
     pkg_info: typing.Dict[str, typing.Union[str, list]]
-) -> typing.List[str]:
-    def find_package_name_from_collection(col_name: str) -> str:
+) -> typing.Union[typing.List[str]]:
+    def find_package_name_from_collection(col_name: str) -> typing.Union[str, None]:
         # I know this is dirty by no other better way :face_palm:
         for pkg_name, collection in PACKAGE_COLLECTION.items():
             if isinstance(collection, list):
                 if col_name in collection:
-                    return
+                    return None
                 continue
             if collection == col_name:
                 return pkg_name
@@ -171,11 +171,15 @@ def get_checksums(pkg: str) -> typing.List[str]:
     checksums_regex_main = re.compile(
         fr"(?P<checksum>[a-zA-Z0-9]*)  ({pkg}-{version}\.tar\.xz)"
     )
-    checksums.append(checksums_regex_main.search(body).group("checksum"))
+    _match = checksums_regex_main.search(body)
+    if _match:
+        checksums.append(_match.group("checksum"))
     checksums_regex_extra = re.compile(
         fr"(?P<checksum>[a-zA-Z0-9]*)  ({pkg}-extra-files\.tar\.xz)"
     )
-    checksums.append(checksums_regex_extra.search(body).group("checksum"))
+    _match = checksums_regex_extra.search(body)
+    if _match:
+        checksums.append(_match.group("checksum"))
     return checksums
 
 
@@ -184,10 +188,10 @@ def main(repo_path: Path):
     version = get_version()
     all_pkg = get_all_packages()
     for pkg in PACKAGE_COLLECTION:
-        backup = []
-        copy_extra_files = []
-        extra_cleanup_scripts_sed = []
-        extra_cleanup_scripts_final = []
+        backup: typing.List[str] = []
+        copy_extra_files: typing.List[typing.Tuple[str, str]] = []
+        extra_cleanup_scripts_sed: typing.List[str] = []
+        extra_cleanup_scripts_final: typing.List[str] = []
         if pkg == "texlive-core":
             package = Package(
                 name=pkg,
@@ -213,8 +217,10 @@ def main(repo_path: Path):
                 extra_cleanup_scripts_final.append("mflua")
             package = Package(
                 name=pkg,
-                desc=all_pkg[PACKAGE_COLLECTION[pkg]]["shortdesc"],
-                deps=find_collection_dependencies(all_pkg[PACKAGE_COLLECTION[pkg]]),
+                desc=str(all_pkg[str(PACKAGE_COLLECTION[pkg])]["shortdesc"]),
+                deps=find_collection_dependencies(
+                    all_pkg[str(PACKAGE_COLLECTION[pkg])]
+                ),
                 groups=get_groups(PACKAGE_COLLECTION[pkg], all_pkg),
                 sha256sums=get_checksums(pkg),
                 backup=backup,
