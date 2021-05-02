@@ -108,7 +108,6 @@ def find_collection_dependencies(
             if dep.startswith("collection-"):
                 p_dep = find_package_name_from_collection(dep)
                 if p_dep:
-                    print(p_dep, pkg_info["name"])
                     deps.append(p_dep)
         return deps
     return []
@@ -224,9 +223,11 @@ def main(repo_path: Path):
                 extra_cleanup_scripts_final=extra_cleanup_scripts_final,
             )
             template = jinja.get_template()
-        template = template.render(package=package, version=version)
+        final_result = (
+            template.render(package=package, version=version) + "\n"
+        )  # add a new line as jinja strips it
         pkgbuild_location = repo_path / f"mingw-w64-{pkg}" / "PKGBUILD"
         if not pkgbuild_location.exists():
             pkgbuild_location.parent.mkdir()
         with pkgbuild_location.open("w", encoding="utf-8") as f:
-            f.write(template)
+            f.write(final_result)
