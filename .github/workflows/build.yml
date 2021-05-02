@@ -42,7 +42,6 @@ jobs:
             "texlive-lang-polish",
             "texlive-lang-portuguese",
             "texlive-lang-spanish",
-            "texlive-latex-base",
             "texlive-latex-extra",
             "texlive-latex-recommended",
             "texlive-luatex",
