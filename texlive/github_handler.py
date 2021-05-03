@@ -89,3 +89,17 @@ def upload_asset(path: _PathLike) -> None:
         print(f"Uploaded {asset_name} as {asset_label}")
     else:
         print("[Warning] Not upload Release Asset.", file=sys.stderr)
+
+
+class Release:
+    def __init__(self, use_pat: bool = False) -> None:
+        repo = get_repo(use_pat)
+        self.release = repo.get_latest_release()
+
+    @property
+    def version(self) -> str:
+        return self.release.tag_name
+
+    @property
+    def body(self) -> str:
+        return self.release.body

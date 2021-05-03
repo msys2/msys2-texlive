@@ -1,9 +1,27 @@
 import argparse
-from pathlib import Path
 import sys
+from pathlib import Path
+
 from .constants import PACKAGE_COLLECTION
 from .logger import logger
 from .main import main_laucher
+
+cli = argparse.ArgumentParser(description="Prepare texlive archives.")
+subparsers = cli.add_subparsers(dest="subcommand")
+
+
+def subcommand(args=[], parent=subparsers):
+    def decorator(func):
+        parser = parent.add_parser(func.__name__, description=func.__doc__)
+        for arg in args:
+            parser.add_argument(*arg[0], **arg[1])
+        parser.set_defaults(func=func)
+
+    return decorator
+
+
+def argument(*name_or_flags, **kwargs):
+    return ([*name_or_flags], kwargs)
 
 
 def main():
@@ -51,7 +69,11 @@ def main():
         from .pkgbuilder import main
         main(args.repo_path, texlive_bin=args.texlive_bin,commit_version=args.source_commit)
 
-    main_laucher(PACKAGE_COLLECTION[args.package], Path(args.directory), args.package)
+    args = cli.parse_args()
+    if args.subcommand is None:
+        cli.print_help()
+    else:
+        args.func(args)
 
 
 if __name__ == "__main__":
