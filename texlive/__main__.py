@@ -53,7 +53,7 @@ def main():
                 "--texlive-bin",
                 action="store_true",
                 help="Edit texlive-bin also.",
-                #default=False,
+                # default=False,
                 dest="texlive_bin",
             ),
             argument(
@@ -67,7 +67,12 @@ def main():
     )
     def makepkgbuild(args):
         from .pkgbuilder import main
-        main(args.repo_path, texlive_bin=args.texlive_bin,commit_version=args.source_commit)
+
+        main(
+            args.repo_path,
+            texlive_bin=args.texlive_bin,
+            commit_version=args.source_commit,
+        )
 
     args = cli.parse_args()
     if args.subcommand is None:

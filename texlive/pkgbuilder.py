@@ -198,7 +198,7 @@ def make_pkgbuild_for_texlive_bin(
     template = jinja_handler.get_template("bin")
     final_scripts = []
     con_handler = retry_get(
-        f"https://github.com/TeX-Live/texlive-source/raw/{commit_version}/texk/texlive/linked_scripts/scripts.lst"
+        f"https://github.com/TeX-Live/texlive-source/raw/{commit_version}/texk/texlive/linked_scripts/scripts.lst"  # noqa: E501
     )
     contents = con_handler.text
     contents_lst = contents.split()[1:-1]
@@ -208,7 +208,7 @@ def make_pkgbuild_for_texlive_bin(
     final_result = template.render(
         version=version_info, cleanup_scripts_final=final_scripts
     )
-    pkgbuild_location = repo_path / f"mingw-w64-texlive-bin" / "PKGBUILD"
+    pkgbuild_location = repo_path / "mingw-w64-texlive-bin" / "PKGBUILD"
     if not pkgbuild_location.exists():
         pkgbuild_location.parent.mkdir()
     with pkgbuild_location.open("w", encoding="utf-8") as f:
@@ -252,7 +252,7 @@ def main(repo_path: Path, texlive_bin: bool = False, commit_version: str = None)
                         "${pkgdir}${MINGW_PREFIX}/etc/texmf/chktex/",
                     ),
                 )
-                extra_cleanup_scripts_final.append("mflua")
+                #extra_cleanup_scripts_final.append("mflua")
             package = Package(
                 name=pkg,
                 desc=str(all_pkg[str(PACKAGE_COLLECTION[pkg])]["shortdesc"]),

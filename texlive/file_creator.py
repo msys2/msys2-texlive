@@ -5,6 +5,7 @@ from string import Template
 from textwrap import dedent
 
 from .logger import logger
+from .requests_handler import retry_get
 
 
 def create_fmts(
@@ -449,27 +450,18 @@ def create_linked_scripts(
         r"^( *)texmf-dist\/scripts\/(?P<script_name>[\/\w\-]*)\.(?P<script_ext>[\/\w\-]*)",  # noqa: E501
         re.MULTILINE,
     )
-
+    # See https://github.com/msys2/msys2-texlive/issues/10 for discussions
+    # get the `scripts.lst`, iter through `texlive.tlpdb` and if it exists add it
+    # or else skip.
+    all_scripts = retry_get(
+        "https://github.com/TeX-Live/texlive-source/raw/trunk/texk/texlive/linked_scripts/scripts.lst"  # noqa: E501
+    ).text.split("\n")
     for pkg in pkg_infos:
         for n, all_pkg_iter in enumerate(all_packages):
             if pkg == all_pkg_iter:
                 temp_str = texlive_tlpdb_split[n]
                 for script in find_script_regex.finditer(temp_str):
-                    if script.group("script_ext") in [
-                        "tlu",
-                        "texlua",
-                        "lua",
-                        "pl",
-                        "rb",
-                        "py",
-                        "tcl",
-                        "jar",
-                        "vbs",
-                        "js",
-                        "bat",
-                        "cmd",
-                        "sh",
-                    ]:
+                    if script.group("script_name") in all_scripts:
                         final_file += (
                             script.group("script_name")
                             + "."
