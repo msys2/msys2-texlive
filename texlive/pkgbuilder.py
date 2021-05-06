@@ -252,7 +252,7 @@ def main(repo_path: Path, texlive_bin: bool = False, commit_version: str = None)
                         "${pkgdir}${MINGW_PREFIX}/etc/texmf/chktex/",
                     ),
                 )
-                #extra_cleanup_scripts_final.append("mflua")
+                # extra_cleanup_scripts_final.append("mflua")
             package = Package(
                 name=pkg,
                 desc=str(all_pkg[str(PACKAGE_COLLECTION[pkg])]["shortdesc"]),
