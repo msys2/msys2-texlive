@@ -84,7 +84,7 @@ jobs:
         shell: pwsh
         run: |
           mkdir build
-          python -m texlive ${{ matrix.package }} $PWD\build
+          python -m texlive build ${{ matrix.package }} $PWD\build
 
       - uses: actions/upload-artifact@v2
         with:
