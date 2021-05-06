@@ -87,6 +87,7 @@ jobs:
           python -m texlive build ${{ matrix.package }} $PWD\build
 
       - uses: actions/upload-artifact@v2
+        if: ${{ github.event_name != 'release' }}
         with:
           path: build/*
           name: build-assets-${{ matrix.package }}

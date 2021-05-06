@@ -465,6 +465,6 @@ def create_linked_scripts(
                         final_file += script.group("script") + "\n"
                 break
     final_file += '"'
-    with filename_save.open("w", encoding="utf-8", newline='\n') as f:
+    with filename_save.open("w", encoding="utf-8", newline="\n") as f:
         f.write(final_file)
         logger.info("Wrote %s", filename_save)

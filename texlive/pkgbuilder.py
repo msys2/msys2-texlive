@@ -211,7 +211,7 @@ def make_pkgbuild_for_texlive_bin(
     pkgbuild_location = repo_path / "mingw-w64-texlive-bin" / "PKGBUILD"
     if not pkgbuild_location.exists():
         pkgbuild_location.parent.mkdir()
-    with pkgbuild_location.open("w", encoding="utf-8") as f:
+    with pkgbuild_location.open("w", encoding="utf-8", newline="\n") as f:
         f.write(final_result)
     logger.info("Writtern PKGBUILD for texlive-bin")
 
@@ -273,5 +273,5 @@ def main(repo_path: Path, texlive_bin: bool = False, commit_version: str = None)
         pkgbuild_location = repo_path / f"mingw-w64-{pkg}" / "PKGBUILD"
         if not pkgbuild_location.exists():
             pkgbuild_location.parent.mkdir()
-        with pkgbuild_location.open("w", encoding="utf-8") as f:
+        with pkgbuild_location.open("w", encoding="utf-8", newline="\n") as f:
             f.write(final_result)
