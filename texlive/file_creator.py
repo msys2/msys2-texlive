@@ -447,7 +447,7 @@ def create_linked_scripts(
     final_file = "# This file contains linked scripts list for the package.\n"
     final_file += 'linked_scripts="'
     find_script_regex = re.compile(
-        r"^( *)texmf-dist\/scripts\/(?P<script_name>[\/\w\-]*)\.(?P<script_ext>[\/\w\-]*)",  # noqa: E501
+        r"^( *)texmf-dist\/scripts\/(?P<script>(?P<script_name>[\/\w\-]*)\.(?P<script_ext>[\/\w\-]*))",  # noqa: E501
         re.MULTILINE,
     )
     # See https://github.com/msys2/msys2-texlive/issues/10 for discussions
@@ -461,15 +461,10 @@ def create_linked_scripts(
             if pkg == all_pkg_iter:
                 temp_str = texlive_tlpdb_split[n]
                 for script in find_script_regex.finditer(temp_str):
-                    if script.group("script_name") in all_scripts:
-                        final_file += (
-                            script.group("script_name")
-                            + "."
-                            + script.group("script_ext")
-                            + "\n"
-                        )
+                    if script.group("script") in all_scripts:
+                        final_file += script.group("script") + "\n"
                 break
     final_file += '"'
-    with filename_save.open("w", encoding="utf-8") as f:
+    with filename_save.open("w", encoding="utf-8", newline='\n') as f:
         f.write(final_file)
         logger.info("Wrote %s", filename_save)
