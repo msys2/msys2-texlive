@@ -299,6 +299,9 @@ def create_language_lua(
     )
     final_file = "-- test"  # this is to avoid empty files.
 
+    default_lefthyphenmin = 2
+    default_righthyphenmin = 3
+
     def parse_string(temp: str) -> typing.Dict[str, str]:
         t_dict: typing.Dict[str, str] = {}
         for mat in key_value_search_regex.finditer(temp):
@@ -319,6 +322,10 @@ def create_language_lua(
         ]:
             if i not in t_dict:
                 t_dict[i] = ""
+        if t_dict["lefthyphenmin"] == "":
+            t_dict["lefthyphenmin"] = default_lefthyphenmin
+        if t_dict["righthyphenmin"] == "":
+            t_dict["righthyphenmin"] = default_righthyphenmin
         return t_dict
 
     for pkg in pkg_infos:
