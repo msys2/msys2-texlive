@@ -299,8 +299,8 @@ def create_language_lua(
     )
     final_file = "-- test"  # this is to avoid empty files.
 
-    default_lefthyphenmin = 2
-    default_righthyphenmin = 3
+    default_lefthyphenmin = "2"
+    default_righthyphenmin = "3"
 
     def parse_string(temp: str) -> typing.Dict[str, str]:
         t_dict: typing.Dict[str, str] = {}
