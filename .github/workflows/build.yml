@@ -95,7 +95,7 @@ jobs:
   update-release-body:
     name: Update Release Body
     runs-on: windows-latest
-    if: ${{ github.event_name== 'release' }}
+    if: ${{ github.event_name == 'release' }}
     needs: texlive-built
     steps:
       - uses: actions/checkout@v2

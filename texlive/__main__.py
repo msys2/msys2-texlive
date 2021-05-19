@@ -4,7 +4,7 @@ from pathlib import Path
 
 from .constants import PACKAGE_COLLECTION
 from .logger import logger
-from .main import main_laucher
+from .main import download_texlive_tlpdb, find_mirror, main_laucher
 
 cli = argparse.ArgumentParser(description="Prepare texlive archives.")
 subparsers = cli.add_subparsers(dest="subcommand")
@@ -73,6 +73,11 @@ def main():
             texlive_bin=args.texlive_bin,
             commit_version=args.source_commit,
         )
+
+    @subcommand()
+    def get_texlive_tlpdb(args):
+        logger.info("Downloading texlive.tlpdb")
+        download_texlive_tlpdb(find_mirror())
 
     args = cli.parse_args()
     if args.subcommand is None:
