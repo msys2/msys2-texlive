@@ -10,6 +10,7 @@ from .requests_handler import retry_get
 default_lefthyphenmin = "2"
 default_righthyphenmin = "3"
 
+
 def create_fmts(
     pkg_infos: typing.Dict[
         str, typing.Union[typing.Dict[str, typing.Union[str, list]]]
