@@ -2,7 +2,7 @@
 name = "msys2-texlive"
 version = "0.1.0"
 description = ""
-authors = ["Naveen M K <naveen@syrusdark.website>"]
+authors = ["Naveen M K <naveen521kk@gmail.com>"]
 packages = [
     { include = "texlive" },
 ]
