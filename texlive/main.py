@@ -133,8 +133,8 @@ def get_all_packages() -> typing.Dict[str, typing.Dict[str, typing.Union[list, s
 def get_dependencies(
     name: str,
     pkglist: typing.Dict[str, typing.Dict[str, typing.Union[list, str]]],
-    collection_list: typing.List[str] = None,
-    final_deps: typing.List[str] = None,
+    collection_list: typing.Optional[typing.List[str]] = None,
+    final_deps: typing.Optional[typing.List[str]] = None,
 ) -> typing.List[str]:
     if final_deps is None:
         final_deps = []

@@ -175,13 +175,13 @@ def get_checksums(pkg: str) -> typing.List[str]:
     body = release.body
     version = release.version
     checksums_regex_main = re.compile(
-        fr"(?P<checksum>[a-zA-Z0-9]*)  ({pkg}-{version}\.tar\.xz)"
+        rf"(?P<checksum>[a-zA-Z0-9]*)  ({pkg}-{version}\.tar\.xz)"
     )
     _match = checksums_regex_main.search(body)
     if _match:
         checksums.append(_match.group("checksum"))
     checksums_regex_extra = re.compile(
-        fr"(?P<checksum>[a-zA-Z0-9]*)  ({pkg}-extra-files\.tar\.xz)"
+        rf"(?P<checksum>[a-zA-Z0-9]*)  ({pkg}-extra-files\.tar\.xz)"
     )
     _match = checksums_regex_extra.search(body)
     if _match:
@@ -216,7 +216,11 @@ def make_pkgbuild_for_texlive_bin(
     logger.info("Writtern PKGBUILD for texlive-bin")
 
 
-def main(repo_path: Path, texlive_bin: bool = False, commit_version: str = None):
+def main(
+    repo_path: Path,
+    texlive_bin: bool = False,
+    commit_version: typing.Optional[str] = None,
+):
     if not Path("texlive.tlpdb").exists():
         download_texlive_tlpdb(find_mirror())
     jinja = JinjaHandler()
