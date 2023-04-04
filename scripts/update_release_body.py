@@ -1,6 +1,7 @@
 import sys
 from pathlib import Path
 from textwrap import dedent
+from concurrent.futures import ThreadPoolExecutor
 
 sys.path.append(str(Path(__file__).parent.resolve().parent))
 
@@ -25,9 +26,15 @@ release_assets = get_release_assets(release)
 
 checksums = {}
 
-for asset in release_assets:
-    url = asset.browser_download_url
-    checksums[asset.name] = find_checksum_from_url(url, "sha256")
+with ThreadPoolExecutor(max_workers=12) as executor:
+    results = executor.map(
+        lambda asset: (
+            asset.name,
+            find_checksum_from_url(asset.browser_download_url, "sha256"),
+        ),
+        release_assets,
+    )
+    checksums = dict(results)
 
 checksums_string = "\n".join(
     [f"{checksum}  {name}" for name, checksum in checksums.items()]
