@@ -54,23 +54,18 @@ jobs:
             "texlive-science",
           ]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: "3.8"
-      - uses: actions/cache@v2
-        with:
-          path: ~\AppData\Local\pip\Cache
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
+          cache: pip
 
       - name: Install dependencies
         env:
           PIP_DISABLE_PIP_VERSION_CHECK: 1
         run: |
-          python -m pip install --user 'wheel==0.36.2'
+          python -m pip install --user wheel
           python -m pip install -r requirements.txt
 
       - name: Download
@@ -86,7 +81,7 @@ jobs:
           mkdir build
           python -m texlive build ${{ matrix.package }} $PWD\build
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         if: ${{ github.event_name != 'release' }}
         with:
           path: build/*
@@ -98,21 +93,16 @@ jobs:
     if: ${{ github.event_name == 'release' }}
     needs: texlive-built
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: "3.8"
-
-      - uses: actions/cache@v2
-        with:
-          path: ~\AppData\Local\pip\Cache
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
+          cache: pip
 
       - name: Install dependencies
         run: |
+          python -m pip install wheel
           python -m pip install -r requirements.txt
 
       - name: Update Release Body
