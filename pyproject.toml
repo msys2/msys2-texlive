@@ -21,6 +21,7 @@ coverage = "^7"
 pytest-cov = "^4"
 hypothesis = "^6.10"
 types-requests = "^2"
+types-Jinja2 = "^2"
 
 [tool.poetry.plugins]
 [tool.poetry.plugins."console_scripts"]
