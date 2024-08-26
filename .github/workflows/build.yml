@@ -54,11 +54,11 @@ jobs:
             "texlive-science",
           ]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: "3.8"
+          python-version: "3.9"
           cache: pip
 
       - name: Install dependencies
@@ -81,7 +81,7 @@ jobs:
           mkdir build
           python -m texlive build ${{ matrix.package }} $PWD\build
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: ${{ github.event_name != 'release' }}
         with:
           path: build/*
@@ -93,11 +93,11 @@ jobs:
     if: ${{ github.event_name == 'release' }}
     needs: texlive-built
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: "3.8"
+          python-version: "3.9"
           cache: pip
 
       - name: Install dependencies
