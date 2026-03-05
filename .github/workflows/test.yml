@@ -10,7 +10,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
-        python-version: ['3.9', '3.10']
+        python-version: ['3.12', '3.13', '3.14']
 
     steps:
     - uses: actions/checkout@v4
@@ -21,15 +21,14 @@ jobs:
   
     - name: Install dependencies
       run: |
-        pipx install poetry
-        poetry install
+        pipx install uv
 
     - name: Run Tests
       run: |
-        poetry run pytest
+        uv run pytest
 
     - name: Run Mypy and Flake
       run: |
-        poetry run mypy texlive
-        poetry run flake8 texlive
+        uv run mypy texlive
+        uv run flake8 texlive
 

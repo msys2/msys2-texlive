@@ -1,35 +1,51 @@
-[tool.poetry]
+[project]
 name = "msys2-texlive"
 version = "0.1.0"
 description = ""
-authors = ["Naveen M K <naveen521kk@gmail.com>"]
-packages = [
-    { include = "texlive" },
+authors = [{ name = "Naveen M K", email = "naveen521kk@gmail.com" }]
+requires-python = ">=3.12"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
 ]
-[tool.poetry.dependencies]
-python = "^3.8.1"
-requests = "^2.25.1"
-PyGithub = "^1.54.1" 
-Jinja2 = "^2.11.3"
+dependencies = [
+    "requests>=2.25.1,<3",
+    "PyGithub>=1.54.1,<2",
+    "Jinja2>=2.11.3,<3",
+]
 
-[tool.poetry.dev-dependencies]
-mypy = "^1"
-flake8 = "^6"
-black = "^23.3"
-pytest = "^7.2"
-coverage = "^7"
-pytest-cov = "^4"
-hypothesis = "^6.10"
-types-requests = "^2"
-types-Jinja2 = "^2"
+[project.scripts]
+msys2-texlive = "texlive.__main__:main"
 
-[tool.poetry.plugins]
-[tool.poetry.plugins."console_scripts"]
-"msys2-texlive" = "texlive.__main__:main"
+[project.entry-points]
+
+[dependency-groups]
+dev = [
+    "mypy>=1,<2",
+    "flake8>=6,<7",
+    "black>=23.3,<24",
+    "pytest>=7.2,<8",
+    "coverage>=7,<8",
+    "pytest-cov>=4,<5",
+    "hypothesis>=6.10,<7",
+    "types-requests>=2,<3",
+    "types-Jinja2>=2,<3",
+]
+
+[tool.uv]
+
+[tool.uv.build-backend]
+module-name = ["texlive"]
+module-root = ""
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["uv_build>=0.10.7,<0.11.0"]
+build-backend = "uv_build"
 
 [tool.isort]
 # from https://black.readthedocs.io/en/stable/compatible_configs.html
